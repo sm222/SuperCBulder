@@ -2,6 +2,7 @@
 #include "dataType.h"
 #include "utilse.h"
 #include "parsing.h"
+#include "program.h"
 
 bool test_name(const char* name) {
   # if (SYSTYPE == SYS_LINUX) || (SYSTYPE == SYS_MAC)
@@ -33,7 +34,7 @@ int base(t_mainData data, int fdIn, int fdOut) {
   int status = EX_OK;
   t_setting programSetting;
   //
-  bzero(&programSetting, sizeof(programSetting));
+  memset(&programSetting, 0 ,sizeof(programSetting));
   programSetting.stdIn = fdIn;
   programSetting.stdOut = fdOut;
   programSetting.programeName = data.av[0];
@@ -63,6 +64,7 @@ int base(t_mainData data, int fdIn, int fdOut) {
     if (programSetting.stopOnError && status)
       break ;
   }
+  status = program(&programSetting);
   return status;
 }
 

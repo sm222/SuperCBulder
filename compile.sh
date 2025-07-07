@@ -2,6 +2,7 @@
 
 name='base'
 
+# not safe but meh
 files=$(ls src/*.c)
 
 

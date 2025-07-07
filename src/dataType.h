@@ -73,7 +73,12 @@ typedef struct setting {
   int help;
 } t_setting;
 
-
+typedef struct FilesList {
+  char* name;
+  int   type;
+  struct FilesList* child;
+  struct FilesList* next;
+} t_FilesList;
 
 
 #endif
