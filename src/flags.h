@@ -25,6 +25,7 @@ static const char* const singleFlags[] = {
   "-c             -  turn on color",
   "-s             -  contine parsing if invalid flags",
   "-h             -  show this message",
+  "-p             -  run the program in this folder as root",
   0x0, // NULL
 };
 
@@ -33,7 +34,7 @@ enum {
   e_stopError,
   e_info,
   e_help,
-  e_dest,
+  e_path,
 };
 
 
@@ -43,8 +44,7 @@ static const char* const verboseFlags[] = {
   "--stopOnError  -   same as s",
   "--info         -   todo     ",
   "--help         -   same as h",
-  "--dest={path}  -   move and print pwd",
-  "--file>{file}    list the file by alpah",
+  "--path={path}  -   run the program in this folder as root",
   0x0, // NULL
 };
 

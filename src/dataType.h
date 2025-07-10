@@ -67,6 +67,8 @@ typedef struct setting {
   //
   int rule[2]; //* [0] valueArg | type (verbose or single)
   //
+  char workignDir[PATH_MAX + 1];
+  //
   int color;
   int stopOnError;
   int helpFlag[2];

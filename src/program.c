@@ -72,14 +72,6 @@ int freeNode(t_FilesList** list) {
 
 # include <dirent.h>
 # include <sys/stat.h>
-/*
-  stat(head->name, &stats);
-  if (S_ISDIR(stats.st_mode))
-    printf("%s valid\n", head->name);
-  else
-    printf("%s invalid\n", head->name);
-  head = head->next;
-*/
 
 void printfolder(t_FilesList* list, int tab, int mode) {
   const char* b = "\t\t\t\t\t\t\t\t\t\t\t\t\t";
@@ -130,13 +122,15 @@ static int getFileType(const char* fileName) {
   return -1;
 }
 
-int mapingDir(const char* dir, t_FilesList** list) {
-  if (isValidFolder(dir))
+# define MAX_DEP 5
+
+int mapingDir(const char* dir, t_FilesList** list, int dep) {
+  if (isValidFolder(dir) || dep > MAX_DEP)
     return 1;
   struct dirent* de = NULL;
   DIR* dr = opendir(dir);
   if (dr == NULL) {
-    fprintf(stderr, "can't open or read %s\n", dir);
+    fprintf(stderr, "scb: can't open or read %s\n", dir);
     return 1;
   }
   struct stat stats;
@@ -150,7 +144,7 @@ int mapingDir(const char* dir, t_FilesList** list) {
       t_FilesList* t = makeNodeLast(de->d_name, type, list);
       if (strncmp(".", de->d_name, 2) != 0 && strncmp("..", de->d_name, 3) != 0) {
         if (type == folder) // if foler
-          mapingDir(wd, &t->child);
+          mapingDir(wd, &t->child, dep + 1);
         else
           t->type = getFileType(de->d_name);
       }
@@ -160,18 +154,30 @@ int mapingDir(const char* dir, t_FilesList** list) {
   return 0;
 }
 
+
+static void setup(programParam* data, char* wd, t_setting* setting) {
+  memset(data, 0, sizeof(*data));
+  data->setting = setting;
+  if (data->setting->workignDir[0]) {
+    const size_t l = strlen(data->setting->workignDir) + 1;
+    memcpy(wd, data->setting->workignDir, l);
+  }
+  else {
+    getcwd(wd, PATH_MAX);
+    printf("current folder %s\n", wd);
+  }
+}
+
+
 int program(t_setting* setting) {
   int error = 0;
-  (void)setting;
+  programParam data;
   char wd[PATH_MAX + 1];
-  getcwd(wd, PATH_MAX);
-  printf("current folder %s\n", wd);
+  //
+  setup(&data, wd, setting);
   //
   t_FilesList* list = NULL;
-  mapingDir(wd, &list);
-  //for (t_FilesList* head = list; head; head = head->next) {
-  //  printf("> %s %d\n", head->name, head->type);
-  //}
+  error = mapingDir(wd, &list, 0);
   printfolder(list, 0, 1);
   freeNode(&list);
   return error;

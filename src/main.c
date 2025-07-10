@@ -64,7 +64,8 @@ int base(t_mainData data, int fdIn, int fdOut) {
     if (programSetting.stopOnError && status)
       break ;
   }
-  status = program(&programSetting);
+  if (!status)
+    status = program(&programSetting);
   return status;
 }
 

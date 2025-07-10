@@ -91,8 +91,9 @@ int setVerboseFlag(const char* line, t_setting* programSetting) {
   if (i == e_help) {
     programSetting->help = 1;
   }
-  if (i == e_dest) {
-    programSetting->flagval = "w";
+  if (i == e_path) {
+    snprintf(programSetting->workignDir, PATH_MAX, \
+      "%s", programSetting->flagval);
   }
   return 0;
 }

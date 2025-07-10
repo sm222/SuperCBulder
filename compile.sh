@@ -1,6 +1,6 @@
 #!/bin/sh
 
-name='base'
+name='scb'
 
 # not safe but meh
 files=$(ls src/*.c)
