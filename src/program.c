@@ -100,6 +100,8 @@ static void setup(programParam* data, char* wd, t_setting* setting) {
   }
 }
 
+int build(t_setting* setting, t_FilesList* root);
+
 int program(t_setting* setting) {
   int error = 0;
   programParam data;
@@ -110,6 +112,7 @@ int program(t_setting* setting) {
   t_FilesList* list = NULL;
   error = mapingDir(wd, &list, 0);
   printfolder(list, 0, 1);
+  build(setting, list);
   freeNode(&list);
   return error;
 }
