@@ -7,7 +7,7 @@ void printfolder(t_FilesList* list, int tab, int mode) {
   while (list) {
     if (strncmp(".", list->data.name, 2) != 0 && strncmp("..", list->data.name, 3) != 0) {
       if (mode && list->data.type != -1)
-        printf("%.*s[%d]%s size -> %zu\n", tab, b, list->data.type, list->data.name, list->data.size);
+        printf("%.*s[%d]%s p -> %p\n", tab, b, list->data.type, list->data.name, list->parant);
     }
     if (list->child) {
       printfolder(list->child, tab + 1, mode);
