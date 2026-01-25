@@ -75,7 +75,7 @@ int mapingDir(const char* dir, t_FilesList** list, int dep) {
       if ((strncmp(".", de->d_name, 2) == 0 || strncmp("..", de->d_name, 3) == 0))
         continue;
       t_FilesList* t = makeNodeLast(de->d_name, type, list);
-      if (type == folder) { // if foler
+      if (type == folder) {
         mapingDir(wd, &t->child, dep + 1);
         t->data.size = getNodeLen(t->child);
       }

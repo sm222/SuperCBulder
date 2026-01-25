@@ -1,2 +1,18 @@
-name=test
-vertion=1
+TYPE:MakeFile
+
+name  = test
+namex = .out
+#
+vertion = 1
+#
+raylib = ../Engine/include/raylib/src/libraylib.a
+
+engine_flags    =   $(RAYLIB) -lGL -lm -lrt -lX11
+engine_setting  =   -D HOT_RELOAD=1 -Wno-missing-field-initializers
+
+debug = -g
+
+CC:
+
+DEP:
+buildraylib: make -C ../Engine/include/raylib/src/

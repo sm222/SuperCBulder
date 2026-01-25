@@ -78,6 +78,7 @@ typedef struct setting {
 
 typedef struct FilesListData {
   char*  name;
+  char*  parant;
   int    type;
   size_t size;
 } FilesListData;
