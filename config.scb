@@ -1,7 +1,7 @@
 TYPE:MakeFile
 
 name  = test
-namex = .out
+
 #
 vertion = 1
 #
@@ -11,6 +11,10 @@ engine_flags    =   $(RAYLIB) -lGL -lm -lrt -lX11
 engine_setting  =   -D HOT_RELOAD=1 -Wno-missing-field-initializers
 
 debug = -g
+
+#
+ING:
+../Engine/include
 
 CC:
 
