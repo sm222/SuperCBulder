@@ -16,7 +16,7 @@ static char* getFileTypeSimble(int n) {
   return "error!";
 }
 
-void printfolder(t_FilesList* list, int tab, int mode) {
+void printfolder(t_node* list, int tab, int mode) {
   const char* b = "*\t*\t*\t*\t*\t*\t*\t*\t*\t*\t*\t*\t*\t*\t*\t";
   while (list) {
     if (strncmp(".", list->data.name, 2) != 0 && strncmp("..", list->data.name, 3) != 0) {
@@ -24,7 +24,7 @@ void printfolder(t_FilesList* list, int tab, int mode) {
       if (list->data.type != folder)
         printf("%.*s[%s]%s\n", tab * 2, b, getFileTypeSimble(list->data.type), list->data.name);
       else {
-        printf("%.*s[%zu][%s]%s\n", tab * 2, b, list->data.size, getFileTypeSimble(list->data.type), list->data.name);
+        printf("%.*s[%zu][%s]%s\n", tab * 2, b, list->data.fsize, getFileTypeSimble(list->data.type), list->data.name);
       }
     }
     if (list->child) {
@@ -34,41 +34,6 @@ void printfolder(t_FilesList* list, int tab, int mode) {
   }
 }
 
-bool get_to_start(t_FilesList** list) {
-  if (!list)
-    return false;
-  if (!*list)
-    return false;
-  t_FilesList* tmp = *list;
-  while (tmp->prev)
-    tmp = tmp->prev;
-  *list = tmp;
-  return true;
-}
-
-static void swapData(t_FilesList* node) {
-  const FilesListData tmpdata = node->data;
-  node->data = node->next->data;
-  node->next->data = tmpdata;
-  void* child = node->child;
-  node->child = node->next->child;
-  node->next->child = child;
-}
-
-static void move_folder_up(t_FilesList** list, int d) {
-  if (!get_to_start(list))
-    return;
-  t_FilesList* tmp = *list;
-  for ( ; tmp->next; tmp = tmp->next) {
-    if (tmp->data.type == folder) {
-      move_folder_up(&tmp->child, d + 1);
-    }
-    if (tmp->data.type != folder && tmp->next->data.type == folder) {
-      swapData(tmp);
-      tmp = *list;
-    }
-  }
-}
 
 
 static int testFolderList(const char* folder) {
@@ -116,7 +81,7 @@ static bool testDotsFiles(const char* name) {
 }
 
 
-static int connectToFolder(t_FilesList* list, t_FilesList* head) {
+int connectToFolder(t_FilesList* list, t_FilesList* head) {
   while (list) {
     if (list->data.type == folder) {
       connectToFolder(list->child, list);
@@ -127,14 +92,48 @@ static int connectToFolder(t_FilesList* list, t_FilesList* head) {
   return 0;
 }
 
+// not null safe
+static bool isEmtyF(t_node* node) {
+  return (node->data.type == folder && node->data.fsize == 0);
+}
 
-int mapingDir(const char* dir, t_FilesList** list, int maxDep) {
-  if (isValidFolder(dir) || !maxDep)
+void deledEmty(t_node** list) {
+  if (!list || !*list)
+    return;
+  t_node* tmp = *list;
+  t_node* prv = NULL;
+  while (tmp) {
+    printf("here\n");
+    t_node* head = *list;
+    if (tmp && tmp == head && isEmtyF(tmp)) {
+      *list = tmp->next;
+      free(tmp->data.name);
+      free(tmp);
+      tmp = *list;
+      continue ;
+    }
+    if (prv && isEmtyF(tmp)) {
+      printf("me\n");
+      t_node* next = tmp->next;
+      prv->next = next;
+      free(tmp->data.name);
+      free(tmp);
+      tmp = prv;
+      continue;
+    }
+    tmp = tmp->next;
+    prv = tmp;
+  }
+}
+
+
+int mapDir(const char* path, t_node** head, unsigned int maxDep) {
+  if (isValidFolder(path) || !maxDep)
     return 1; // only care if error happen of first try
   struct dirent* de = NULL;
-  DIR* dr = opendir(dir);
+  DIR* dr = opendir(path);
   if (dr == NULL) {
-    fprintf(stderr, "scb: can't open or read %s\n", dir);
+    fprintf(stderr, "scb: can't open or read %s\n", path);
     return 1;
   }
   struct stat stats;
@@ -142,26 +141,24 @@ int mapingDir(const char* dir, t_FilesList** list, int maxDep) {
   do {
     de = readdir(dr);
     if (de) {
-      snprintf(wd, PATH_MAX, "%s/%s", dir, de->d_name);
+      snprintf(wd, PATH_MAX, "%s/%s", path, de->d_name);
       stat(wd, &stats);
       const int type = S_ISDIR(stats.st_mode) ? folder : getFileType(de->d_name);
-      if (testDotsFiles(de->d_name) || (type != folder && type == unknown))
-        continue;
-      t_FilesList* t = makeNodeLast(de->d_name, type, list);
-      if (type == folder) {
-        mapingDir(wd, &t->child, --maxDep);
-        t->data.size = getNodeLen(t->child);
-        if (t->child && t->child->data.size == 0) {
-          printf("->name:%s\n", t->child->data.name);
+      if (testDotsFiles(de->d_name) || (type == unknown && type != folder) || isValidFolder(wd)) {
+        continue ;
+      } else {
+        t_node* t = makeNodeLast(de->d_name, type, head);
+        if (type == folder) {
+          mapDir(wd, &t->child, --maxDep);
+          t->data.fsize = getNodeLen(t->child);
         }
       }
-      else
-        t->data.type = type;
     }
   } while (de != NULL);
   closedir(dr);
   return 0;
 }
+
 
 static void setup(t_SCB* setting) {
   getcwd(setting->path, PATH_MAX);
@@ -177,11 +174,12 @@ int setStart(void* in) {
   //
   setup(&SCB);
   //
-  t_FilesList* list = NULL;
-  SCB.error = mapingDir(SCB.path, &list, 10);
+  t_node* list = NULL;
+  SCB.error = mapDir(SCB.path, &list, 10);
   if (!SCB.error) {
-    move_folder_up(&list, 0);
-    connectToFolder(list, NULL);
+    //move_folder_up(&list, 0);
+    //connectToFolder(list, NULL);
+    //deledEmty(&list);
     printfolder(list, 0, 1);
   }
   freeNode(&list);
