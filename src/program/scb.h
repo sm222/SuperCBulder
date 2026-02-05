@@ -13,10 +13,11 @@ enum {
 };
 
 typedef struct {
-  char     path[PATH_MAX + 1];
-  char     configPath[PATH_MAX + 1];
-  int32_t  flags;
-  int      error;
+  char          path[PATH_MAX + 1];
+  char          configPath[PATH_MAX + 1];
+  unsigned int  maxDep;
+  int32_t       flags;
+  int           error;
 } t_SCB;
 
 #endif

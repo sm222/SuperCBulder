@@ -7,7 +7,13 @@ static char* getFileTypeSimble(int n) {
     return "C";
   if (n == hFile)
     return "H";
-  return "uh";
+  if (n == cppFile)
+    return "CPP";
+  if (n == hppFile)
+    return "HPP";
+  if (n == tppFile)
+    return "TPP";
+  return "error!";
 }
 
 void printfolder(t_FilesList* list, int tab, int mode) {
@@ -15,8 +21,11 @@ void printfolder(t_FilesList* list, int tab, int mode) {
   while (list) {
     if (strncmp(".", list->data.name, 2) != 0 && strncmp("..", list->data.name, 3) != 0) {
       //test_co(list, list->next);
-      if (mode && list->data.type != -1)
+      if (list->data.type != folder)
         printf("%.*s[%s]%s\n", tab * 2, b, getFileTypeSimble(list->data.type), list->data.name);
+      else {
+        printf("%.*s[%zu][%s]%s\n", tab * 2, b, list->data.size, getFileTypeSimble(list->data.type), list->data.name);
+      }
     }
     if (list->child) {
       printfolder(list->child, tab + 1, mode);
@@ -46,22 +55,6 @@ static void swapData(t_FilesList* node) {
   node->next->child = child;
 }
 
-static void move_alpah(t_FilesList** list) {
-  for () {
-  
-  }
-  t_FilesList* tmp = *list;
-  for ( ; tmp->next; tmp = tmp->next) {
-    if (tmp->data.type == folder) {
-      move_alpah(&tmp->child);
-    }
-    if (tmp->data.type != folder && tmp->next->data.type == folder) {
-      swapData(tmp);
-      get_to_start(&tmp);
-    }
-  }
-}
-
 static void move_folder_up(t_FilesList** list, int d) {
   if (!get_to_start(list))
     return;
@@ -72,7 +65,7 @@ static void move_folder_up(t_FilesList** list, int d) {
     }
     if (tmp->data.type != folder && tmp->next->data.type == folder) {
       swapData(tmp);
-      get_to_start(&tmp);
+      tmp = *list;
     }
   }
 }
@@ -151,16 +144,19 @@ int mapingDir(const char* dir, t_FilesList** list, int maxDep) {
     if (de) {
       snprintf(wd, PATH_MAX, "%s/%s", dir, de->d_name);
       stat(wd, &stats);
-      int type = S_ISDIR(stats.st_mode) ? folder : unknown;
-      if (testDotsFiles(de->d_name))
+      const int type = S_ISDIR(stats.st_mode) ? folder : getFileType(de->d_name);
+      if (testDotsFiles(de->d_name) || (type != folder && type == unknown))
         continue;
       t_FilesList* t = makeNodeLast(de->d_name, type, list);
       if (type == folder) {
         mapingDir(wd, &t->child, --maxDep);
         t->data.size = getNodeLen(t->child);
+        if (t->child && t->child->data.size == 0) {
+          printf("->name:%s\n", t->child->data.name);
+        }
       }
       else
-        t->data.type = getFileType(de->d_name);
+        t->data.type = type;
     }
   } while (de != NULL);
   closedir(dr);
