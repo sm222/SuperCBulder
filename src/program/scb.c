@@ -16,6 +16,12 @@ static char* getFileTypeSimble(int n) {
   return "error!";
 }
 
+static void* dell_node(t_node* n) {
+  free(n->data.name);
+  free(n);
+  return NULL;
+}
+
 void printfolder(t_node* list, int tab, int mode) {
   const char* b = "|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t";
   while (list) {
@@ -84,6 +90,8 @@ static bool isEmtyF(t_node* node) {
   return (node->data.type == folder && node->data.fsize == 0);
 }
 
+
+
 int deledEmty(t_node** list) {
   if (!list && !*list) {
     return 0;
@@ -93,9 +101,7 @@ int deledEmty(t_node** list) {
   while (*list && isEmtyF(*list)) {
     t_node* tmp = (*list)->next;
     t_node* tooFree = *list;
-    printf("dell->%s\n", tooFree->data.name);
-    free(tooFree->data.name);
-    free(tooFree);
+    dell_node(tooFree);
     *list = tmp;
     dell++;
   }
@@ -105,17 +111,16 @@ int deledEmty(t_node** list) {
       t_node* tooFree = tmp->next;
       t_node* next = tooFree->next;
       tmp->next = next;
-      printf("dell->%s\n", tooFree->data.name);
-      free(tooFree->data.name);
-      free(tooFree);
+      dell_node(tooFree);
       tmp = *list;
       dell++;
       continue ;
     }
     if (tmp->data.type == folder) {
-      (*list)->data.fsize -= deledEmty(&tmp->child);
-      if ((*list)->data.fsize == 0)
+      tmp->data.fsize -= deledEmty(&tmp->child);
+      if (tmp->data.fsize == 0) {
         goto HEADDELL;
+      }
     }
     tmp = tmp->next;
   }

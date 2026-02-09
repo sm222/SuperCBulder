@@ -2,6 +2,7 @@
 #include <string.h>
 
 
+
 static t_node* makeNode(char* name, int type) {
   if (!name)
     return NULL;
