@@ -1,18 +1,30 @@
 # include "MakerUtilse.h"
 
-static void drawVarName(const char* name) {
+# include <ctype.h>
+
+static void drawVarName(const char* name, const int* fd) {
   size_t i = 0;
-  while () {
-  
+  const size_t nameLen = strlen(name);
+  char outBuffer[(nameLen * 2) + 10];
+  size_t rptr = 2;
+  memcpy(outBuffer, "F_", 2);
+  while (name[i]) {
+    outBuffer[rptr] = (char)toupper(name[i]);
+    i++;
+    rptr++;
   }
+  memcpy(outBuffer + rptr, "\t=\t\n", 5);
+  write(*fd, outBuffer, strlen(outBuffer));
 }
 
 static void  buidFileAndFolder(t_node* head, const int* fd) {
   t_node* tmp = head;
   while (tmp) {
     if (tmp->data.type == folder) {
-      drawVarName(tmp->data.name);
+      drawVarName(tmp->data.name, fd);
+      buidFileAndFolder(tmp->child, fd);
     }
+    tmp = tmp->next;
   }
 }
 
