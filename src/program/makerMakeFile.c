@@ -127,11 +127,22 @@ static ssize_t drawEnd(outFileData* data) {
 
 
 
+static int parsingFile(outFileData* data) {
+  if (data->varArray && data->var[0] && strncmp(data->var[0], "TYPE:", 5) == 0) {
+    printf("[T]%s\n", data->var[0] + 5);
+  }
+  return 0;
+}
+
+
 ssize_t buildMakefile(outFileData* data) {
   ssize_t totalBytes = 0;
   const char* hardcodePname = "scb";//!
   if (!newFile("Makefile", data))
     return -1;
+  if (data->configFd) {
+    parsingFile(data);
+  }
   totalBytes += header(data->fd, findCommentFromType(data->outputType), getenv("USER"), hardcodePname, "Makefile");
   totalBytes += drawCompiler(data);
   totalBytes += drawName(hardcodePname, data->fd);

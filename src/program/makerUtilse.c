@@ -185,10 +185,11 @@ size_t header(int fd, const char* comment, const char* uName, const char* pName,
 
 #include <ctype.h>
 
-int super_strcmp(const char* s1, const char* s2) {
-  if(!s1 || !s2)
+int superStrcmp(const char* s1, const char* s2, size_t n) {
+  if(!s1 || !s2 || n == 0)
     return -1;
-  while (tolower(*s1) == tolower(*s2)) {
+  while (*s1 && *s2 && tolower(*s1) == tolower(*s2) && n--) {
+    printf("%c|%c\n", *s1, *s2);
     s1++;
     s2++;
   }
@@ -202,7 +203,7 @@ int read_file(outFileData* file) {
   size_t rawFileSize = startSize;
   char* line = "line";
   while (line) {
-    line = get_next_line(file->fd);
+    line = get_next_line(file->configFd);
     file->var[numberLine] = line;
     file->varByte += strlen(line ? line : "");
     numberLine++;
@@ -223,16 +224,83 @@ outFileData makerSetup(t_SCB* in, int mode) {
   data.workingDirectory = in->path;
   memcpy(data.cCompiler,   "cc", 3);
   memcpy(data.cppCompiler, "c++", 4);
-  memcpy(data.config, "config.scb", 12);
+  memcpy(data.configFilename, "config.scb", 12);
   return data;
 }
 
 # include "makerMakeFile.h"
 
-int makerStart(outFileData *data) {
+static void makeConfig(void) {
+  const int fd = open("config.scb", O_CREAT | O_TRUNC , 0644);
+  if (fd < 0) {
+    perror("scb");
+  }
+  close(fd);
+}
+
+static int testConfigFile(outFileData* data) {
+  char buff[MAXPATHLEN * 2];
+  sprintf(buff, "%s/%s", data->workingDirectory, data->configFilename);
+  if (access(buff, R_OK) == 0) {
+    data->configFd = open(buff, O_RDONLY);
+    if (data->configFd < 0) {
+      perror("open");
+      return 1;
+    }
+    read_file(data);
+    return 0;
+  }
+  perror(data->configFilename);
+  char out[2];
+  fprintf(stderr, "no config file found, do you want to continue?\n");
+  fprintf(stderr, "[y] yes | [m] make one | anyting else no\n");
+  read(STDIN_FILENO, out, 1);
+  if (out[0] == 'y')
+    return 0;
+  if (out[0] == 'm') {
+    makeConfig();
+    return 1;
+  }
+  fprintf(stderr, "scb: stop\n");
+  return 1;
+}
+
+static size_t findDot(const char* s) {
+  size_t i = 0;
+  while (s[i]) {
+    if (s[i] == ':')
+      return i;
+    i++;
+  }
+  return 0;
+}
+
+static int getFileType(outFileData* data) {
+  if (data->var && data->var[0]) {
+    if (strncmp(data->var[0], "TYPE:", 5) == 0) {
+      printf("AAA\n");
+      size_t i = 0;
+      if (superStrcmp(data->var[0] + 5, buildFileLanguage[i], findDot(buildFileLanguage[i])) == 0) {
+        data->outputType = i;
+        printf("%zu\n", i);
+      }
+    }
+    else {
+      fprintf(stderr, "scb: bad headder\n%s\n", data->var[0]);
+    }
+  } else {
+    fprintf(stderr, "scb: bad headder\n");
+  }
+  return 0;
+}
+
+int makerStart(outFileData* data) {
   ssize_t outB = 0;
-  if (!data)
+  if (!data || testConfigFile(data))
     return -1;
+  if (data->configFd) {
+    getFileType(data);
+  }
   if (data->outputType == makefile) {
     outB = buildMakefile(data);
   }
@@ -251,6 +319,15 @@ bool newFile(char *name, outFileData *data) {
 
 void closeFile(outFileData *data) {
   close(data->fd);
+  if (data->configFd) {
+    close(data->configFd);
+    size_t i = 0;
+    while (data->var[i]) {
+      free(data->var[i]);
+      i++;
+    }
+    free(data->var);
+  }
 }
 
 char* findCommentFromType(int type) {

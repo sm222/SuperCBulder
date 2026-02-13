@@ -32,7 +32,7 @@ typedef struct {
   bool      cpp;
   int       fd;
   int       configFd;
-  char*     filename;
+  char      configFilename[PATH_MAX];
   char*     projectname;
   char**    var;
   size_t    varByte;
@@ -45,6 +45,8 @@ typedef struct {
   char*     config[PATH_MAX];
   t_outVar* outVar;
 } outFileData;
+
+int  superStrcmp(const char* s1, const char* s2, size_t n);
 
 outFileData  makerSetup(t_SCB* in, int mode);
 int          makerStart(outFileData* data);

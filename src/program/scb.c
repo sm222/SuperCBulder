@@ -197,19 +197,17 @@ void moveFolderUp(t_node** list) {
 
 int setStart(void* in) {
   t_setting* ptr = in;
-  (void)ptr;
+  (void)ptr; //! user later for flags
   t_SCB  SCB;
   //
   setup(&SCB);
   //
   SCB.error = mapDir(SCB.path, &SCB.node, 10);
   if (!SCB.error) {
-    //move_folder_up(&list, 0);
-    //connectToFolder(list, NULL);
-    //deledEmty(&list);
     moveFolderUp(&SCB.node);
     deledEmty(&SCB.node);
-    printfolder(SCB.node, 0, 1);
+    //! add flag for visual
+    //printfolder(SCB.node, 0, 1);
     outFileData data = makerSetup(&SCB, 0);
     makerStart(&data);
   }

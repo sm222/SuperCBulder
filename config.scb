@@ -14,11 +14,11 @@ debug = -g
 
 #
 ING:
-../Engine/include
+Engine/include
 
 CR:
-  $engine_flags
-  $engine_setting
+  engine_flags
+  engine_setting
 
 DEP:
 buildraylib: make -C ../Engine/include/raylib/src/
