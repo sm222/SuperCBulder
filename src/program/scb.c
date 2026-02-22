@@ -158,12 +158,6 @@ int mapDir(const char* path, t_node** head, unsigned int maxDep) {
 }
 
 
-static void setup(t_SCB* setting) {
-  bzero(setting, sizeof(*setting));
-  getcwd(setting->path, PATH_MAX);
-  memcpy(setting->configPath, ".", 2);
-}
-
 static bool isSwap(t_node* n) {
   if (n && n->next) {
     if (n->data.type != folder && n->next->data.type == folder)
@@ -197,12 +191,30 @@ void moveFolderUp(t_node** list) {
 
 # include "MakerUtilse.h"
 
+static int setup(t_SCB* setting, void* mainData) {
+  bzero(setting, sizeof(*setting));
+  setting->mainData = mainData;
+  getcwd(setting->originPath, PATH_MAX);
+  memcpy(setting->configPath, ".", 2);
+  const size_t avNb = av_len(&setting->mainData->avNoFlags);
+  if (!avNb) {
+    fprintf(stderr, "scb: no path given\n");
+    return 1;
+  }
+  printf("size av %zu\n", avNb);
+  chdir(av_read(&setting->mainData->avNoFlags, 0));
+  getcwd(setting->path, PATH_MAX);
+  return 0;
+}
+
 int scb(void* data) {
   t_SCB  SCB;
-  (void)data;
-  setup(&SCB);
+  if (setup(&SCB, data)) {
+    return 1;
+  }
   //
   SCB.error = mapDir(SCB.path, &SCB.node, 10);
+  chdir(SCB.originPath);
   if (!SCB.error) {
     moveFolderUp(&SCB.node);
     deledEmty(&SCB.node);

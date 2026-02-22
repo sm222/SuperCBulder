@@ -10,7 +10,9 @@
 
 
 typedef struct {
+  t_setting*    mainData;
   char          path[PATH_MAX + 1];
+  char          originPath[PATH_MAX + 1];
   char          configPath[PATH_MAX + 1];
   unsigned int  maxDep;
   int32_t       flags;
