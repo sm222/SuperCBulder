@@ -137,7 +137,8 @@ static int parsingFile(outFileData* data) {
 
 ssize_t buildMakefile(outFileData* data) {
   ssize_t totalBytes = 0;
-  const char* hardcodePname = "scb";//!
+  // rework later
+  const char* hardcodePname = strrchr(data->scb->originPath, '/') + 1;
   if (!newFile("Makefile", data))
     return -1;
   if (data->configFd) {
@@ -152,4 +153,32 @@ ssize_t buildMakefile(outFileData* data) {
   totalBytes += drawEnd(data);
   freeOutVar(&data->outVar);
   return totalBytes;
+}
+
+
+int printConfigFiles(t_node* head) {
+  char buff[PATH_MAX + 1];
+  memset(buff, '_', PATH_MAX);
+  buff[PATH_MAX] = 0;
+  t_node* tmp = head;
+  size_t maxLen = 0;
+  size_t nbConfigFile = 0;
+  for (; tmp; tmp = tmp->next) {
+    if (tmp->data.type == configFile) {
+      nbConfigFile++;
+      const size_t l = strlen(tmp->data.name);
+      maxLen < l ? maxLen = l: maxLen;
+    }
+  }
+  if (nbConfigFile) {
+    tmp = head;
+    int index = 0;
+    printf("%.*s\n", (int)maxLen + 4, buff);
+    for (; tmp; tmp = tmp->next) {
+      if (tmp->data.type == configFile)
+        printf("[%i]%s\n", ++index,tmp->data.name); 
+    }
+    printf("%.*s\n", (int)maxLen + 4, buff);
+  }
+  return 0;
 }

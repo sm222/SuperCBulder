@@ -66,4 +66,7 @@ t_outVar*   makeOutVarLast(const char* name, t_outVar** list);
 void        freeOutVar(t_outVar** list);
 void        printOutVar(t_outVar* head);
 
+
+int         printConfigFiles(t_node* head);
+
 #endif

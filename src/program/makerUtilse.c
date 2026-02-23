@@ -309,18 +309,6 @@ int getFileType(outFileData* data) {
   return 0;
 }
 
-void lookForConfigFile(outFileData* data) {
-  size_t nb = 0;
-  printf("- - - - - - - - - - - - - -\n");
-  for (t_node* tmp = data->scb->node; tmp; tmp = tmp->next) {
-    if (tmp->data.type == configFile) {
-      char* p = strrchr(data->scb->path, '/');
-      printf("[%zu]%s > %s\n", nb, p, tmp->data.name);
-      nb++;
-    }
-  }
-  printf("config file found - %zu\n", nb);
-}
 
 int makerStart(outFileData* data) {
   ssize_t outB = 0;
@@ -330,7 +318,7 @@ int makerStart(outFileData* data) {
   //if (data->configFd) {
   //  error = getFileType(data);
   //}
-  lookForConfigFile(data);
+  //lookForConfigFile(data);
   if (data->outputType == makefile && !error) {
     outB = buildMakefile(data);
   }
@@ -367,17 +355,3 @@ char* findCommentFromType(int type) {
   }
   return "";
 }
-
-/*
-
-int readConfigFile(outFileData* file) {
-
-  return 0;
-}
-
-//todo
-int openOutFile(outFileData* file) {
-  (void)file;
-  return 0;
-}
-*/

@@ -12,6 +12,13 @@ engine_setting  =   -D HOT_RELOAD=1 -Wno-missing-field-initializers
 
 debug = -g
 
+engine_flags->
+LINUX->   $(RAYLIB) -lGL -lm -lrt -lX11
+WINDOWS-> $(RAYLIB) else
+MAC->     $(RAYLIB) else mac
+DEFAULT-> $(RAYLIB) else default
+#if no default and no case is catch var woud be empty
+
 #
 ING:
 Engine/include

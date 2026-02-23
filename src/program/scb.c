@@ -220,6 +220,7 @@ int scb(void* data) {
     deledEmty(&SCB.node);
     //! add flag for visual
     printfolder(SCB.node, 0, 1);
+    printConfigFiles(SCB.node);
     outFileData data = makerSetup(&SCB, 0);
     SCB.error = makerStart(&data);
   }
