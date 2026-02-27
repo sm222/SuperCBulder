@@ -126,7 +126,7 @@ static char* safe_return(char**  book, t_info* t_val) {
   return (t_val->tmp);
 }
 
-static char* get_next_line(int fd) {
+char* get_next_line(int fd) {
   static char* book = NULL;
   t_info    t_val;
 
@@ -195,6 +195,7 @@ int superStrcmp(const char* s1, const char* s2, size_t n) {
   return *s1 - *s2;
 }
 
+/*
 int read_file(outFileData* file) {
   const size_t startSize = 10;
   file->var = calloc(startSize, sizeof(char*));
@@ -214,6 +215,7 @@ int read_file(outFileData* file) {
   file->varArray = numberLine;
   return 0;
 }
+*/
 
 outFileData makerSetup(t_SCB* in, int mode) {
   outFileData data;
@@ -259,7 +261,7 @@ int testConfigFile(outFileData* data) {
       perror("open");
       return 1;
     }
-    read_file(data);
+    //read_file(data);
     return 0;
   }
   perror(data->configFilename);
@@ -274,7 +276,7 @@ int testConfigFile(outFileData* data) {
   return 1;
 }
 
-static size_t findDot(const char* s) {
+size_t findDot(const char* s) {
   size_t i = 0;
   while (s[i]) {
     if (s[i] == ':')
@@ -285,29 +287,6 @@ static size_t findDot(const char* s) {
 }
 
 
-int getFileType(outFileData* data) {
-  if (data->var && data->var[0]) {
-    size_t i = 0;
-    while (buildFileLanguage[i]) {
-      if (strncmp(data->var[0], "TYPE:", 5) == 0) {
-        size_t dotP = findDot(buildFileLanguage[i]);
-        if (superStrcmp(data->var[0] + 5, buildFileLanguage[i], dotP) == 0 \
-        && ENDL(*(data->var[0] + 5 + dotP))) {
-          data->outputType = i;
-          printf("type chose - %s\n", buildFileLanguage[i]);
-          return 0;
-        }
-      }
-      i++;
-    }
-    fprintf(stderr, "scb: bad headder\n%s\n", data->var[0]);
-    return 1;
-  } else {
-    fprintf(stderr, "scb: bad headder\n");
-    return 1;
-  }
-  return 0;
-}
 
 
 int makerStart(outFileData* data) {
@@ -323,7 +302,7 @@ int makerStart(outFileData* data) {
     outB = buildMakefile(data);
   }
   printf("total byte prints > %zu\n", outB);
-  closeFile(data);
+  //closeFile(data);
   return error;
 }
 
@@ -336,6 +315,7 @@ bool newFile(char *name, outFileData *data) {
   return true;
 }
 
+/*
 void closeFile(outFileData *data) {
   close(data->fd);
   if (data->configFd) {
@@ -348,6 +328,7 @@ void closeFile(outFileData *data) {
     free(data->var);
   }
 }
+*/
 
 char* findCommentFromType(int type) {
   if (type >= 0) {

@@ -10,6 +10,7 @@ typedef struct  {
   char*  name;
   int    type;
   size_t fsize;
+  size_t id;
 } t_node_data;
 
 typedef struct s_node {

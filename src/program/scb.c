@@ -201,8 +201,11 @@ static int setup(t_SCB* setting, void* mainData) {
     fprintf(stderr, "scb: no path given\n");
     return 1;
   }
-  printf("size av %zu\n", avNb);
-  chdir(av_read(&setting->mainData->avNoFlags, 0));
+  const char* path = av_read(&setting->mainData->avNoFlags, 0);
+  if (chdir(path)) {
+    fprintf(stderr, "scb: invalid path: %s\n",path);
+    return 1;
+  }
   getcwd(setting->path, PATH_MAX);
   return 0;
 }

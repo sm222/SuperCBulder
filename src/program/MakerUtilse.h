@@ -30,13 +30,18 @@ typedef struct s_outVar {
   char*            name;
 } t_outVar;
 
+typedef struct configValue {
+  /*
+  EE
+  */
+} t_configValue;
+
 typedef struct {
   bool        cpp;
   int         fd;
   int         configFd;
   char        configFilename[PATH_MAX];
   char*       projectname;
-  char**      var;
   size_t      varByte;
   size_t      varArray;
   t_SCB*      scb;

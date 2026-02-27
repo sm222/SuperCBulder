@@ -10,8 +10,10 @@ static t_node* makeNode(char* name, int type) {
   node = calloc(1, sizeof(*node));
   if (!node)
     return NULL;
+  static size_t id = 0;
   node->data.name = strdup(name);
   node->data.type = type;
+  node->data.id = ++id;
   return node;
 }
 
