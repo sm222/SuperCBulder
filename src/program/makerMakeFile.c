@@ -2,7 +2,7 @@
 
 # include <ctype.h>
 
-char* capName(const char* name) {
+static char* capName(const char* name) {
   static char newName[MAXPATHLEN + 20];
   size_t len = strlen(name);
   bzero(newName, MAXPATHLEN + 20);
@@ -12,10 +12,11 @@ char* capName(const char* name) {
   return newName;
 }
 
-static ssize_t drawVarName(const char* name, const char* from, const int* fd) {
+
+static ssize_t drawVarName(t_node* tmp, const char* from, const int* fd) {
   if (from)
-    return output(*fd, "F_%s\t\t=\t\t$(F_%s)%s/\n\n", capName(name), from ,name);
-  return output(*fd, "F_%s\t\t=\t\t%s/\n\n", capName(name) ,name);
+    return output(*fd, "F_%zu_%s\t\t=\t\t$(F_%s)%s/\n\n", tmp->data.id, capName(tmp->data.name), from ,tmp->data.name);
+  return output(*fd, "F_%zu_%s\t\t=\t\t%s/\n\n", tmp->data.id, capName(tmp->data.name), tmp->data.name);
 }
 
 ssize_t drawFile(t_node* n, const char* name, const int fd) {
@@ -45,13 +46,13 @@ static ssize_t  buidFileAndFolder(outFileData* data, t_node** head, const char* 
   char folderName[MAXPATHLEN];
   bzero(folderName, MAXPATHLEN);
   if (tmp && IS_FOLDER(tmp)) {
-    memcpy(folderName, capName(tmp->data.name), strlen(tmp->data.name) + 1);
+    snprintf(folderName, MAXPATHLEN, "%zu_%s", tmp->data.id, capName(tmp->data.name));
     printf("%s/%s|\n", from, folderName);
   }
   while (tmp) {
     // edit that to make var unique
     if (IS_FOLDER(tmp)) {
-      t += drawVarName(tmp->data.name, from ,fd);
+      t += drawVarName(tmp, from ,fd);
       t += buidFileAndFolder(data, &tmp->child, folderName, fd);
       t += write(*fd, "\n", 1);
     }
@@ -76,12 +77,17 @@ static ssize_t readList(t_node** head, outFileData* data) {
   //! switch that line for windows or other case that path don't hold a /
   t += printRoot(truckPath + 1, data);
   //
-  t += buidFileAndFolder(data ,head, truckPath + 1, &fd);
+  char folderName[MAXPATHLEN];
+  snprintf(folderName, MAXPATHLEN, "%s", truckPath + 1);
+  t += buidFileAndFolder(data, head, folderName, &fd);
   return t;
 }
 
 ssize_t drawName(const char* name, const int fd) {
-  return output(fd, "NAME\t\t=\t\t%s\n\n", name);
+  ssize_t t = output(fd, "NAME\t\t=\t\t%s\n", name);
+  // switch later
+  t += output(fd, "NAMEX\t\t=\t\t%s\n\n", "out");
+  return t;
 }
 
 static ssize_t drawCompiler(outFileData* data) {
