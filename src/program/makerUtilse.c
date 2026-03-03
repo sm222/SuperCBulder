@@ -195,27 +195,6 @@ int superStrcmp(const char* s1, const char* s2, size_t n) {
   return *s1 - *s2;
 }
 
-/*
-int read_file(outFileData* file) {
-  const size_t startSize = 10;
-  file->var = calloc(startSize, sizeof(char*));
-  size_t numberLine = 0;
-  size_t rawFileSize = startSize;
-  char* line = "line";
-  while (line) {
-    line = get_next_line(file->configFd);
-    file->var[numberLine] = line;
-    file->varByte += strlen(line ? line : "");
-    numberLine++;
-    if (numberLine > rawFileSize / 2) {
-      rawFileSize *= 2;
-      file->var = realloc(file->var, sizeof(char*) * rawFileSize);
-    }
-  }
-  file->varArray = numberLine;
-  return 0;
-}
-*/
 
 outFileData makerSetup(t_SCB* in, int mode) {
   outFileData data;
@@ -231,14 +210,6 @@ outFileData makerSetup(t_SCB* in, int mode) {
 
 # include "makerMakeFile.h"
 
-static void makeConfig(void) {
-  const int fd = open("config.scb", O_CREAT | O_TRUNC , 0644);
-  if (fd < 0) {
-    perror("scb");
-  }
-  close(fd);
-}
-
 char* dialogBox(const char* question, const char* option, unsigned int reposeSize) {
   //fprintf(stderr, "no config file found, do you want to continue?\n");
   //fprintf(stderr, "[y] yes | [m] make one | anyting else no\n");
@@ -252,29 +223,7 @@ char* dialogBox(const char* question, const char* option, unsigned int reposeSiz
   return out;
 }
 
-int testConfigFile(outFileData* data) {
-  char buff[MAXPATHLEN * 2];
-  sprintf(buff, "%s/%s", data->workingDirectory, data->configFilename);
-  if (access(buff, R_OK) == 0) {
-    data->configFd = open(buff, O_RDONLY);
-    if (data->configFd < 0) {
-      perror("open");
-      return 1;
-    }
-    //read_file(data);
-    return 0;
-  }
-  perror(data->configFilename);
-  const char* respose = dialogBox("A", "B", 1);
-  if (respose[0] == 'y')
-    return 0;
-  if (respose[0] == 'm') {
-    makeConfig();
-    return 1;
-  }
-  fprintf(stderr, "scb: stop\n");
-  return 1;
-}
+
 
 size_t findDot(const char* s) {
   size_t i = 0;
@@ -286,24 +235,48 @@ size_t findDot(const char* s) {
   return 0;
 }
 
-
-
-
-int makerStart(outFileData* data) {
-  ssize_t outB = 0;
-  int error = 0;
-  //if (!data || testConfigFile(data))
-  //  return 1;
-  //if (data->configFd) {
-  //  error = getFileType(data);
-  //}
-  //lookForConfigFile(data);
-  if (data->outputType == makefile && !error) {
-    outB = buildMakefile(data);
+int printConfigFiles(t_node* head) {
+  char buff[PATH_MAX + 1];
+  memset(buff, '_', PATH_MAX);
+  buff[PATH_MAX] = 0;
+  t_node* tmp = head;
+  size_t maxLen = 0;
+  int nbConfigFile = 0;
+  for (; tmp; tmp = tmp->next) {
+    if (IS_SCB(tmp)) {
+      nbConfigFile++;
+      const size_t l = strlen(tmp->data.name);
+      maxLen < l ? maxLen = l: maxLen;
+    }
   }
-  printf("total byte prints > %zu\n", outB);
-  //closeFile(data);
-  return error;
+  if (nbConfigFile) {
+    tmp = head;
+    int index = 0;
+    printf("%.*s\n", (int)maxLen + 4, buff);
+    for (; tmp; tmp = tmp->next) {
+      if (tmp->data.type == configFile) {
+        printf("[%i]%s\n", ++index,tmp->data.name);
+      }
+    }
+    printf("%.*s\n", (int)maxLen + 4, buff);
+  }
+  return nbConfigFile;
+}
+
+static char* getConfigName(outFileData* data, unsigned int i) {
+  if (!data || i == 0) return NULL;
+  t_node* t = data->scb->node;
+  unsigned int j = 0;
+  while (t) {
+    if (IS_SCB(t)) {
+      j++;
+      if (j == i) {
+        return t->data.name;
+      }
+    }
+    t = t->next;
+  }
+  return NULL;
 }
 
 bool newFile(char *name, outFileData *data) {
@@ -315,20 +288,42 @@ bool newFile(char *name, outFileData *data) {
   return true;
 }
 
-/*
-void closeFile(outFileData *data) {
-  close(data->fd);
-  if (data->configFd) {
-    close(data->configFd);
-    size_t i = 0;
-    while (data->var[i]) {
-      free(data->var[i]);
-      i++;
-    }
-    free(data->var);
+static bool makeDefaultConfigFile(outFileData* data) {
+  const int fd = open("defaultConfigFile.scb", O_CREAT | O_TRUNC | O_RDWR, 0644);
+  if (!fd) {
+    fprintf(stderr, "scb: fail to make default file %s\n", strerror(errno));
+    return false;
   }
+  //! add safety later
+  const char* name = strrchr(data->scb->path, '/') + 1;
+  output(fd, "NAME:%s\n", name);
+  output(fd, "NAMEX:\n\n");
+  output(fd, "MAXDEPH:5\n\n");
+  output(fd, "# ignore folder, exp: var/\n");
+  output(fd, "ING:\n\n");
+  output(fd, "# add var from config file\n");
+  output(fd, "CR:\n\n");
+  output(fd, "# dependecy\n");
+  output(fd, "DEP:\n\n");
+  output(fd, "\n# all those variable are reserve\n");
+  for (int i = 0; reserveVarName[i]; i++) {
+    output(fd, "# %s:\n", reserveVarName[i]);
+  }
+  output(fd, "#\n");
+  close(fd);
+  printf("default file made\n");
+  return true;
 }
-*/
+
+static int makeChoiseNoConfigFile(char respose, outFileData* data) {
+  if (respose == 'c') {
+    return 0;
+  }
+  else if (respose == 'm') {
+    makeDefaultConfigFile(data);
+  }
+  return 1;
+}
 
 char* findCommentFromType(int type) {
   if (type >= 0) {
@@ -336,3 +331,56 @@ char* findCommentFromType(int type) {
   }
   return "";
 }
+
+static int openConfigFile(outFileData* data) {
+  if (!data->configFile.name) {
+    return 1;
+  }
+  data->configFile.fd = open(data->configFile.name, O_RDONLY);
+  if (data->configFile.fd == 0) {
+    perror("scb");
+    return 1;
+  }
+  // add read file
+  return 0;
+}
+
+static int closeConfigFile(outFileData* data) {
+  if (data->configFile.fd) {
+    close(data->configFile.fd);
+    return 1;
+  }
+  return 0;
+}
+
+
+int makerStart(outFileData* data) {
+  ssize_t outB = 0;
+  int error = 0;
+  const int configFile = printConfigFiles(data->scb->node);
+  if (!configFile) {
+    const char* r =  \
+    dialogBox(NO_CONFIG_FILE, WITCH_FILE_QUESTION, 1);
+    if (makeChoiseNoConfigFile(r[0], data)) {
+      fprintf(stderr, "scb: stop\n");
+      return 1;
+    }
+  } else if (configFile == 1) {
+    printf("config file foud\n");
+    data->configFile.name = getConfigName(data, 1);
+  }
+  else {
+    const char* r = dialogBox(WITCH_FILE, "[number]", 2);
+    const int n = atoi(r);
+    data->configFile.name = getConfigName(data, n);
+  }
+  openConfigFile(data);
+  if (data->outputType == makefile && !error) {
+    outB = buildMakefile(data);
+  }
+  closeConfigFile(data);
+  printf("total byte prints > %zu\n", outB);
+  return error;
+}
+
+

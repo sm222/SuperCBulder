@@ -11,7 +11,12 @@
 
 # define ENDL(c)    ((c == '\n') || (c == '\0'))
 
+# define NO_CONFIG_FILE "no config file found, \
+ you want to make one or continue whit out it?"
 
+# define WITCH_FILE "multiple file found, witch one want to be use"
+# define WITCH_FILE_QUESTION "[c] continue | [m] make a config file | \
+ else stop"
 enum {
   makefile = 0,
   bash     = 1,
@@ -30,16 +35,31 @@ typedef struct s_outVar {
   char*            name;
 } t_outVar;
 
+static const char* const reserveVarName[] = {
+  "NAME",
+  "NAMEX",
+  "CC",
+  "CXX",
+  "ING",
+  "CR",
+  "DEP",
+  0x0,
+};
+
 typedef struct configValue {
-  /*
-  EE
-  */
+  int      fd;
+  char*    name;
+  char**   rawData;
+  char*    value;
+  size_t   read;
+  size_t   readV;
 } t_configValue;
+
+int readConfigFile(t_configValue* file);
 
 typedef struct {
   bool        cpp;
   int         fd;
-  int         configFd;
   char        configFilename[PATH_MAX];
   char*       projectname;
   size_t      varByte;
@@ -51,6 +71,8 @@ typedef struct {
   char        cppCompiler[100];
   char*       config[PATH_MAX];
   t_outVar*   outVar;
+  //
+  t_configValue configFile;
 } outFileData;
 
 int  superStrcmp(const char* s1, const char* s2, size_t n);

@@ -45,13 +45,10 @@ static ssize_t  buidFileAndFolder(outFileData* data, t_node** head, const char* 
   ssize_t t = 0;
   char folderName[MAXPATHLEN];
   bzero(folderName, MAXPATHLEN);
-  if (tmp && IS_FOLDER(tmp)) {
-    snprintf(folderName, MAXPATHLEN, "%zu_%s", tmp->data.id, capName(tmp->data.name));
-    printf("%s/%s|\n", from, folderName);
-  }
   while (tmp) {
     // edit that to make var unique
     if (IS_FOLDER(tmp)) {
+      snprintf(folderName, MAXPATHLEN, "%zu_%s", tmp->data.id, capName(tmp->data.name));
       t += drawVarName(tmp, from ,fd);
       t += buidFileAndFolder(data, &tmp->child, folderName, fd);
       t += write(*fd, "\n", 1);
@@ -140,9 +137,6 @@ ssize_t buildMakefile(outFileData* data) {
   const char* hardcodePname = strrchr(data->scb->originPath, '/') + 1;
   if (!newFile("Makefile", data))
     return -1;
-  if (data->configFd) {
-    //parsingFile(data);
-  }
   totalBytes += header(data->fd, findCommentFromType(data->outputType), getenv("USER"), hardcodePname, "Makefile");
   totalBytes += drawCompiler(data);
   totalBytes += drawName(hardcodePname, data->fd);
@@ -154,30 +148,3 @@ ssize_t buildMakefile(outFileData* data) {
   return totalBytes;
 }
 
-
-int printConfigFiles(t_node* head) {
-  char buff[PATH_MAX + 1];
-  memset(buff, '_', PATH_MAX);
-  buff[PATH_MAX] = 0;
-  t_node* tmp = head;
-  size_t maxLen = 0;
-  size_t nbConfigFile = 0;
-  for (; tmp; tmp = tmp->next) {
-    if (tmp->data.type == configFile) {
-      nbConfigFile++;
-      const size_t l = strlen(tmp->data.name);
-      maxLen < l ? maxLen = l: maxLen;
-    }
-  }
-  if (nbConfigFile) {
-    tmp = head;
-    int index = 0;
-    printf("%.*s\n", (int)maxLen + 4, buff);
-    for (; tmp; tmp = tmp->next) {
-      if (tmp->data.type == configFile)
-        printf("[%i]%s\n", ++index,tmp->data.name); 
-    }
-    printf("%.*s\n", (int)maxLen + 4, buff);
-  }
-  return 0;
-}

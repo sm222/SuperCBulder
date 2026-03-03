@@ -82,20 +82,13 @@ static bool testDotsFiles(const char* name) {
 }
 
 
-// not null safe
-static bool isEmtyF(t_node* node) {
-  return (node->data.type == folder && node->data.fsize == 0);
-}
-
-
-
 int deledEmty(t_node** list) {
   if (!list && !*list) {
     return 0;
   }
   int dell = 0;
   HEADDELL: // first time using it
-  while (*list && isEmtyF(*list)) {
+  while (*list && IS_FOLDER_EMPTY(((t_node*)*list))) {
     t_node* tmp = (*list)->next;
     t_node* tooFree = *list;
     dellNode(tooFree);
@@ -104,7 +97,7 @@ int deledEmty(t_node** list) {
   }
   t_node* tmp = *list;
   while (tmp) {
-    if (tmp->next && isEmtyF(tmp->next)) {
+    if (tmp->next && IS_FOLDER_EMPTY(tmp->next)) {
       t_node* tooFree = tmp->next;
       t_node* next = tooFree->next;
       tmp->next = next;
@@ -195,7 +188,6 @@ static int setup(t_SCB* setting, void* mainData) {
   bzero(setting, sizeof(*setting));
   setting->mainData = mainData;
   getcwd(setting->originPath, PATH_MAX);
-  memcpy(setting->configPath, ".", 2);
   const size_t avNb = av_len(&setting->mainData->avNoFlags);
   if (!avNb) {
     fprintf(stderr, "scb: no path given\n");
@@ -205,6 +197,9 @@ static int setup(t_SCB* setting, void* mainData) {
   if (chdir(path)) {
     fprintf(stderr, "scb: invalid path: %s\n",path);
     return 1;
+  }
+  if (avNb > 1) {
+    setting->buildType = av_read(&setting->mainData->avNoFlags, 1);
   }
   getcwd(setting->path, PATH_MAX);
   return 0;
@@ -223,7 +218,6 @@ int scb(void* data) {
     deledEmty(&SCB.node);
     //! add flag for visual
     printfolder(SCB.node, 0, 1);
-    printConfigFiles(SCB.node);
     outFileData data = makerSetup(&SCB, 0);
     SCB.error = makerStart(&data);
   }

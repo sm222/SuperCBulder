@@ -1,30 +1,25 @@
-NAME:test
-NAMEX:
+NAME:scb
+NAMEX:.out
 
 MAXDEPH: 5
 
-raylib:  ../Engine/include/raylib/src/libraylib.a
-
-engine_setting:   -D HOT_RELOAD=1 -Wno-missing-field-initializers
 
 debug:  =  -g
 
-engine_flags:
-  %LINUX   %raylib -lGL -lm -lrt -lX11
-  %WINDOWS %raylib else
-  %MAC     %raylib else mac
-  %DEFAULT %raylib else default
+test:
+  %LINUX   -D VAR=A
+  %WINDOWS -D VAR=B
+  %MAC     -D VAR=C
+  %DEFAULT -D VAR=D
 
 # if no default and no case is catch var woud be empty
 
 
 ING:
-  Engine/include
 
 CR:
-  %engine_flags
-  %engine_setting
   %debug
+  %test
 
 DEP:
-  make -C ../Engine/include/raylib/src/
+  echo 'hello world!'
