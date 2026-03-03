@@ -224,7 +224,6 @@ char* dialogBox(const char* question, const char* option, unsigned int reposeSiz
 }
 
 
-
 size_t findDot(const char* s) {
   size_t i = 0;
   while (s[i]) {
@@ -332,6 +331,24 @@ char* findCommentFromType(int type) {
   return "";
 }
 
+static int readConfigFile(t_configValue* file) {
+  size_t alloc = 20;
+  size_t index = 0;
+  char* l = "";
+  file->rawData = calloc(alloc, sizeof(char*));
+  while (l) {
+    if (alloc / 2 == index) {
+      alloc *= 2;
+      file->rawData = realloc(file->rawData, sizeof(char*) * alloc);
+    }
+    file->rawData[index] = get_next_line(file->fd);
+    l = file->rawData[index];
+    index++;
+  }
+  return 0;
+}
+
+
 static int openConfigFile(outFileData* data) {
   if (!data->configFile.name) {
     return 1;
@@ -341,16 +358,24 @@ static int openConfigFile(outFileData* data) {
     perror("scb");
     return 1;
   }
-  // add read file
+  readConfigFile(&data->configFile);
   return 0;
 }
 
 static int closeConfigFile(outFileData* data) {
   if (data->configFile.fd) {
     close(data->configFile.fd);
-    return 1;
+    size_t i = 0;
+    while (data->configFile.rawData[i]) {
+      printf("%s\n" , data->configFile.rawData[i]);
+      free(data->configFile.rawData[i]);
+      i++;
+    }
+    free(data->configFile.rawData);
+    data->configFile.rawData = NULL;
+    return 0;
   }
-  return 0;
+  return 1;
 }
 
 

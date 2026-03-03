@@ -55,7 +55,6 @@ typedef struct configValue {
   size_t   readV;
 } t_configValue;
 
-int readConfigFile(t_configValue* file);
 
 typedef struct {
   bool        cpp;
