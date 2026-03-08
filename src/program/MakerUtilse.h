@@ -38,33 +38,37 @@ typedef struct s_outVar {
 } t_outVar;
 
 static const char* const reserveVarName[] = {
-  "NAME",
-  "NAMEX",
   "CC",
   "CXX",
+  "NAME",
+  "NAMEX",
+  "CFLAGS",
+  "CXXFLAGS",
   "ING",
   "CR",
   "DEP",
   0x0,
 };
 
+# define MAX_VAR_NAME_LEN (PATH_MAX * 4)
+
 typedef struct configValue {
   int      fd;
   char*    name;
   char**   rawData;
-  char*    value;
-  size_t   read;
-  size_t   readV;
+  char buffer[MAX_VAR_NAME_LEN];
 } t_configValue;
 
 enum varReserveName {
-  cc,
-  cxx,
-  name,
-  namex,
-  ing,
-  cr,
-  dep,
+  Vcc,
+  Vcxx,
+  Vname,
+  Vnamex,
+  VCFLAGS,
+  VCXXFLAGS,
+  Ving,
+  Vcr,
+  Vdep,
 };
 
 typedef struct s_reserveVar {
@@ -75,15 +79,9 @@ typedef struct s_reserveVar {
 typedef struct {
   bool        cpp;
   int         fd;
-  char        configFilename[PATH_MAX];
-  char*       projectname;
-  size_t      varByte;
-  size_t      varArray;
   t_SCB*      scb;
   int         outputType;
   char*       workingDirectory;
-  char        cCompiler[100];
-  char        cppCompiler[100];
   char*       config[PATH_MAX];
   t_outVar*   outVar;
   //
@@ -108,6 +106,12 @@ char*       findCommentFromType(int type);
 t_outVar*   makeOutVarLast(const char* name, t_outVar** list);
 void        freeOutVar(t_outVar** list);
 void        printOutVar(t_outVar* head);
+
+
+char*       readVariable(outFileData* data, int var);
+
+
+int         removeEndl(char* value);
 
 
 int         printConfigFiles(t_node* head);

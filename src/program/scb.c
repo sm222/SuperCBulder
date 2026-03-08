@@ -20,14 +20,20 @@ static char* getFileTypeSimble(int n) {
 
 
 void printfolder(t_node* list, int tab, int mode) {
-  const char* b = "|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t|\t";
+  const char* b = "|  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  \
+|  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |";
+  char buff[10];
+  buff[0] = 0;
   while (list) {
+    if (mode) {
+      bzero(buff, 10);
+      snprintf(buff, 10, "[%zu]", list->data.id);
+    }
     if (strncmp(".", list->data.name, 2) != 0 && strncmp("..", list->data.name, 3) != 0) {
-      //test_co(list, list->next);
       if (list->data.type != folder)
-        printf("%.*s[%s]%s\n", tab * 2, b, getFileTypeSimble(list->data.type), list->data.name);
+        printf("%.*s[%s]%s%s\n", tab * 3, b, getFileTypeSimble(list->data.type), buff, list->data.name);
       else {
-        printf("%.*s[%s][%zu]%s\n", tab * 2, b, getFileTypeSimble(list->data.type), list->data.fsize, list->data.name);
+        printf("%.*s[%s]%s[%zu]%s\n", tab * 3, b, getFileTypeSimble(list->data.type), buff, list->data.fsize, list->data.name);
       }
     }
     if (list->child) {
@@ -119,7 +125,7 @@ int deledEmty(t_node** list) {
 
 
 int mapDir(const char* path, t_node** head, unsigned int maxDep) {
-  if (isValidFolder(path) || !maxDep)
+  if (isValidFolder(path) || maxDep == 0)
     return 1; // only care if error happen of first try
   struct dirent* de = NULL;
   DIR* dr = opendir(path);
@@ -211,13 +217,13 @@ int scb(void* data) {
     return 1;
   }
   //
-  SCB.error = mapDir(SCB.path, &SCB.node, 10);
+  SCB.error = mapDir(SCB.path, &SCB.node, 30);
   chdir(SCB.originPath);
   if (!SCB.error) {
     moveFolderUp(&SCB.node);
     deledEmty(&SCB.node);
     //! add flag for visual
-    printfolder(SCB.node, 0, 1);
+    printfolder(SCB.node, 0, 0);
     outFileData data = makerSetup(&SCB, 0);
     SCB.error = makerStart(&data);
   }

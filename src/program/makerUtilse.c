@@ -199,12 +199,10 @@ int superStrcmp(const char* s1, const char* s2, size_t n) {
 outFileData makerSetup(t_SCB* in, int mode) {
   outFileData data;
   bzero(&data, sizeof(data));
+  data.var.size = (sizeof(reserveVarName) / sizeof(char*)) - 1;
   data.scb = in;
   data.outputType = mode;
   data.workingDirectory = in->path;
-  memcpy(data.cCompiler,   "cc", 3);
-  memcpy(data.cppCompiler, "c++", 4);
-  memcpy(data.configFilename, "", 1);
   return data;
 }
 
@@ -377,22 +375,107 @@ static int closeConfigFile(outFileData* data) {
   return 1;
 }
 
-char* readConfigFileLine(outFileData* data) {
-  t_configValue* conf = &data->configFile;
-  conf->value = conf->rawData[conf->read];
-  if (!conf->value) {
-    conf->read = 0;
-  }
-  conf->read++;
-  return conf->value;
-}
-
-static void printVar(outFileData* data) {
-  printf("%lu\n", data->var.size);
+void printVar(outFileData* data) {
   for (size_t i = 0; i < data->var.size; i++) {
     printf("%s[%c]\n", reserveVarName[i], data->var.varVAlue[i] ? 'x' : ' ');
   }
 }
+
+int  removeEndl(char* value) {
+  if (!value)
+    return 0;
+  size_t l = strlen(value) - 1;
+  if (value[l] == '\n') {
+    value[l] = 0;
+    return 1;
+  }
+  return 0;
+}
+
+static int isVarName(char* str, const char* const* var) {
+  int i = 0;
+  for (; var[i]; i++) {}
+  const int size = i;
+  for (i = 0; i < size; i++) {
+    size_t varLen = strlen(var[i]);
+    if (strncmp(str, var[i], varLen) == 0 && str[varLen] == ':') {
+      return i;
+    }
+  }
+  return -1;
+}
+
+static int checkVar(outFileData* data) {
+  if (!data->configFile.fd)
+    return 0;
+  for (size_t i = 0; data->configFile.rawData[i]; i++) {
+    const int res = isVarName(data->configFile.rawData[i], reserveVarName);
+    if (res >= 0 && !data->var.varVAlue[res]) {
+      data->var.varVAlue[res] = true;
+    }
+    else if (res >= 0) {
+      fprintf(stderr, "scb: %s redeclare var at ->\n", reserveVarName[res]);
+      fprintf(stderr, "%s:%zu\n",data->configFile.name, i + 1);
+      return 1;
+    }
+  }
+  return 0;
+}
+
+static bool isVar(const char* line, const char* varName, size_t l) {
+  return (strncmp(line, varName, l) == 0 && line[l] == ':');
+}
+
+
+static ssize_t addTo(char* to, const char* add, size_t curentLen, bool addSpace) {
+  ssize_t added = 0;
+  const char* space = addSpace ? " " : "";
+  added = snprintf(to + curentLen, MAX_VAR_NAME_LEN - curentLen, "%s%s", space, add);
+  added -= removeEndl(to + curentLen);
+  return added;
+}
+
+size_t skipWhiteSpace(const char* s, size_t start) {
+  size_t i = 0;
+  if (!s)
+    return 0;
+  while (isspace(s[i + start])) {
+    i++;
+  }
+  return i;
+}
+
+//!static 
+ssize_t chekVarType(const char* s) {
+  if (!s) {
+    return -1;
+  }
+  size_t i = skipWhiteSpace(s, 0);
+  while (s[i]) {
+    
+  }
+  return 0;//!!
+}
+
+char* readVariable(outFileData* data, int var) {
+  if (var < 0 || var > (int)data->var.size)
+  return NULL;
+bzero(data->configFile.buffer, MAX_VAR_NAME_LEN);
+usleep(10000);
+const char* find = reserveVarName[var];
+const size_t varLen = strlen(find);
+size_t i = 0;
+ssize_t curentLen = 0;
+while (data->configFile.rawData[i]) {
+  if (isVar(data->configFile.rawData[i], find, varLen)) {
+    break;
+  }
+  i++;
+}
+curentLen += addTo(data->configFile.buffer, data->configFile.rawData[i] + (varLen + 1), curentLen, false);
+return data->configFile.buffer;
+}
+
 
 int makerStart(outFileData* data) {
   ssize_t outB = 0;
@@ -415,6 +498,7 @@ int makerStart(outFileData* data) {
     data->configFile.name = getConfigName(data, n);
   }
   openConfigFile(data);
+  error = checkVar(data);
   printVar(data);
   if (data->outputType == makefile && !error) {
     outB = buildMakefile(data);

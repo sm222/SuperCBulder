@@ -12,6 +12,9 @@ static char* capName(const char* name) {
   return newName;
 }
 
+static int isVarInConfig(int var, t_reserveVar varList) {
+  return varList.varVAlue[var];
+}
 
 static ssize_t drawVarName(t_node* tmp, const char* from, const int* fd) {
   if (from)
@@ -19,11 +22,20 @@ static ssize_t drawVarName(t_node* tmp, const char* from, const int* fd) {
   return output(*fd, "F_%zu_%s\t\t=\t\t%s/\n\n", tmp->data.id, capName(tmp->data.name), tmp->data.name);
 }
 
-ssize_t drawFile(t_node* n, const char* name, const int fd) {
-  return output(fd, "\t$(F_%s)%s%s\n", name, n->data.name, n->next ? "\\" : "");
+static bool isNextFileValid(t_node* node) {
+  while (node && node->next) {
+    if (IS_C_CPP(node->next)) {
+      return true;
+    }
+    node = node->next;
+  }
+  return false;
 }
 
-//todo draw file in a object var
+static ssize_t drawFile(t_node* n, const char* name, const int fd) {
+  const bool valid = isNextFileValid(n);
+  return output(fd, "\t$(F_%s)%s%s\n", name, n->data.name, valid ? "\\" : "");
+}
 
 ssize_t putAllFiles(outFileData* data, t_node* tmp, const char* from, const int fd) {
   makeOutVarLast(from, &data->outVar);
@@ -80,20 +92,28 @@ static ssize_t readList(t_node** head, outFileData* data) {
   return t;
 }
 
-ssize_t drawName(const char* name, const int fd) {
-  ssize_t t = output(fd, "NAME\t\t=\t\t%s\n", name);
-  // switch later
-  t += output(fd, "NAMEX\t\t=\t\t%s\n\n", "out");
+ssize_t drawName(const char* name, const int fd, outFileData* data) {
+  const char* nameValue = name;
+  const char* namexValue = "";
+  ssize_t t = 0;
+  if (isVarInConfig(Vname, data->var)) {
+    nameValue = readVariable(data, Vname);
+  }
+  t += output(fd, "NAME\t\t=\t\t%s\n", nameValue);
+  if (isVarInConfig(Vnamex, data->var)) {
+    namexValue = readVariable(data, Vnamex);
+  }
+  t += output(fd, "NAMEX\t\t=\t\t%s\n\n", namexValue);
   return t;
 }
 
 static ssize_t drawCompiler(outFileData* data) {
   ssize_t total = 0;
-  total += output(data->fd, "CC\t\t=\t%s\n", data->cCompiler);
-  total += output(data->fd, "CXX\t\t=\t%s\n", data->cppCompiler);
-  total += output(data->fd, "\n\rDEBUG\t\t\t=\t\t-g\n\n", data->cCompiler);
-  total += output(data->fd, "CFLAGS\t\t\t=\t-Wall -Werror -Wextra $(DEBUG)\n", data->cCompiler);
-  total += output(data->fd, "CCFLAGS\t\t=\t-Wall -Werror -Wextra $(DEBUG)\n\n\n", data->cCompiler);
+  total += output(data->fd, "CC\t\t=\t%s\n", "cc");
+  total += output(data->fd, "CXX\t\t=\t%s\n", "c++");
+  total += output(data->fd, "\n\rDEBUG\t\t\t=\t\t-g\n\n");
+  total += output(data->fd, "CFLAGS\t\t\t=\t-Wall -Werror -Wextra $(DEBUG)\n");
+  total += output(data->fd, "CXXFLAGS\t\t=\t-Wall -Werror -Wextra $(DEBUG)\n\n\n");
   return total;
 }
 
@@ -101,7 +121,7 @@ static ssize_t drawObjectVar(outFileData* data) {
   ssize_t t = output(data->fd, "SRCS_FILES\t\t=\t\\\n");
   t_outVar* tmp = data->outVar;
   while (tmp) {
-    t += output(data->fd, "\t$(O_%s)\t\t\\\n", tmp->name);
+    t += output(data->fd, "\t$(O_%s)%s\n", tmp->name, tmp->next ? "\t\\" : "");
     tmp = tmp->next;
   }
   t += output(data->fd, "\nOBJS	=	$(SRCS_FILES:.c=.o)\n\n");
@@ -118,7 +138,7 @@ static ssize_t drawMakeRule(outFileData* data) {
   t += output(data->fd, "$(NAME): $(%s)\n\n", compiler);
   t += output(data->fd, "$(%s): $(OBJS)\n\t$(%s) $(CFLAGS) $(OBJS)", compiler, compiler);
   //!add more var if needed
-  t +=  output(data->fd, " -o $(NAME)\n\n");
+  t +=  output(data->fd, " -o $(NAME)$(NAMEX)\n\n");
   return t;
 }
 
@@ -139,7 +159,7 @@ ssize_t buildMakefile(outFileData* data) {
     return -1;
   totalBytes += header(data->fd, findCommentFromType(data->outputType), getenv("USER"), hardcodePname, "Makefile");
   totalBytes += drawCompiler(data);
-  totalBytes += drawName(hardcodePname, data->fd);
+  totalBytes += drawName(hardcodePname, data->fd, data);
   totalBytes += readList(&data->scb->node, data);
   totalBytes += drawObjectVar(data);
   totalBytes += drawMakeRule(data);

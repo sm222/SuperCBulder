@@ -1,10 +1,14 @@
 NAME:scb
-NAMEX:.out
+#NAMEX:.out
 
 MAXDEPH: 5
 
 
-debug:  =  -g
+debug:  -g %test
+
+
+test: %debug
+
 
 test:
   %LINUX   -D VAR=A
