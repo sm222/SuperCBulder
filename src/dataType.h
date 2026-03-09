@@ -35,7 +35,7 @@
 # ifndef COLORS
 #  define COLORS
 #  define CS  "\001"   //*start code
-#  define CE  "\002\0" //*end   code
+#  define CE  "\002"   //*end   code
 #  define RED    CS "\e[31m" CE
 #  define GRN    CS "\e[32m" CE
 #  define YEL    CS "\e[33m" CE

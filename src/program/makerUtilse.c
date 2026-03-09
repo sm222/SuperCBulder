@@ -428,16 +428,29 @@ static bool isVar(const char* line, const char* varName, size_t l) {
 
 
 static ssize_t addTo(char* to, const char* add, size_t curentLen, bool addSpace) {
+  if (MAX_VAR_NAME_LEN - (curentLen + addSpace) > 0) {
+    fprintf(stderr, "scb: var is too long\n");
+    return 0;
+  }
   ssize_t added = 0;
-  const char* space = addSpace ? " " : "";
-  added = snprintf(to + curentLen, MAX_VAR_NAME_LEN - curentLen, "%s%s", space, add);
+  const char* space  = addSpace ? " " : "";
+  added = snprintf(to + curentLen, MAX_VAR_NAME_LEN - (curentLen + addSpace), "%s%s", space, add);
   added -= removeEndl(to + curentLen);
   return added;
 }
 
+static ssize_t addToc(char* to, char c, size_t curentLen) {
+  if (MAX_VAR_NAME_LEN - curentLen > 0) {
+    fprintf(stderr, "scb: var is too long\n");
+    return 0;
+  }
+  to[curentLen] = c;
+  return 1;
+}
+
 size_t skipWhiteSpace(const char* s, size_t start) {
   size_t i = 0;
-  if (!s)
+  if (!s || *s == '\n')
     return 0;
   while (isspace(s[i + start])) {
     i++;
@@ -445,35 +458,67 @@ size_t skipWhiteSpace(const char* s, size_t start) {
   return i;
 }
 
-//!static 
-ssize_t chekVarType(const char* s) {
-  if (!s) {
+static bool isLinux(const char* var) {
+  const int v = strncmp(var, "LINUX", 5);
+  return (v == 0 && isspace(var[5]));
+}
+
+static int readVar(outFileData* data, const char* s, const size_t cl) {
+  if (*(s - 1) == '\\')
     return -1;
+  s++;
+  (void)cl;
+  if (isLinux(s) && SYSTYPE == SYS_LINUX) {
+    
+  }
+  //! //! add win, add mac
+  (void)data;
+  return 0;
+}
+
+static int chekVarType(outFileData* data, size_t* index, ssize_t* currentLen) {
+  const char* s = data->configFile.rawData[++(*index)];
+  (void)currentLen;
+  if (!s) {
+    return 1;
   }
   size_t i = skipWhiteSpace(s, 0);
+  printf(">>in |%s| %zu\n", s, i);
+  if (i == 0) // no space = var or any elegal info
+    return 1;
   while (s[i]) {
-    
+    if (s[i] == '%') {
+      const int rez = readVar(data, s + i, *index);
+      if (rez == -1)
+        return 0;
+      i += rez;
+    }
+    else {
+      addToc(data->configFile.buffer, s[i], *currentLen);
+      (*currentLen)++;
+    }
+    i++;
   }
   return 0;//!!
 }
 
 char* readVariable(outFileData* data, int var) {
   if (var < 0 || var > (int)data->var.size)
-  return NULL;
-bzero(data->configFile.buffer, MAX_VAR_NAME_LEN);
-usleep(10000);
-const char* find = reserveVarName[var];
-const size_t varLen = strlen(find);
-size_t i = 0;
-ssize_t curentLen = 0;
-while (data->configFile.rawData[i]) {
-  if (isVar(data->configFile.rawData[i], find, varLen)) {
-    break;
+    return NULL;
+  bzero(data->configFile.buffer, MAX_VAR_NAME_LEN);
+  const char* find = reserveVarName[var];
+  const size_t varLen = strlen(find);
+  size_t i = 0;
+  ssize_t curentLen = 0;
+  while (data->configFile.rawData[i]) {
+    if (isVar(data->configFile.rawData[i], find, varLen)) {
+      break;
+    }
+    i++;
   }
-  i++;
-}
-curentLen += addTo(data->configFile.buffer, data->configFile.rawData[i] + (varLen + 1), curentLen, false);
-return data->configFile.buffer;
+  curentLen += addTo(data->configFile.buffer, data->configFile.rawData[i] + (varLen + 1), curentLen, false);
+  while (!chekVarType(data, &i, &curentLen)) {}
+  return data->configFile.buffer;
 }
 
 
