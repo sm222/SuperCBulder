@@ -540,9 +540,9 @@ int checkIfFileValid(outFileData* data) {
   return 0;
 }
 
-static bool checkToc(const char* s) {
-  return (*s == '\\' && *(s + 1) == '%');
-}
+//static bool checkToc(const char* s) {
+//  return (*s == '\\' && *(s + 1) == '%');
+//}
 
 static size_t getValue(outFileData* data, ssize_t* total, const size_t start, const char* name) {
   if (*total >= MAX_VAR_NAME_LEN)
@@ -550,28 +550,17 @@ static size_t getValue(outFileData* data, ssize_t* total, const size_t start, co
   const size_t nameLen = findVarLen(name);
   size_t i = 0;
   const char* l = NULL;
-  fprintf(stderr, "go find |%s|\n", name);
   while (data->configFile.rawData[i]) {
     l = data->configFile.rawData[i];
-    if (i > start) {
-      return nameLen;
-    }
-    if (strncmp(l, name, nameLen) == 0 && l[nameLen] == ':') {
-      break ;
-    }
+    if (i > start) { return nameLen; }
+    if (strncmp(l, name, nameLen) == 0 && l[nameLen] == ':') { break ; }
     i++;
   }
   size_t j = nameLen + 1;
   do {
     varloop:
-    fprintf(stderr, "here %zu %zu\n", i, j);
     while (l && l[j]) {
-      if (checkToc(l + j)) {
-        addToc(data->configFile.buffer, '%', *total);
-        j += 2;
-        (*total)++;
-      }
-      else if (l[j] == '%') {
+      if (l[j] == '%') {
         j += getValue(data, total, i, l + j + 1);
       }
       else {
@@ -580,9 +569,8 @@ static size_t getValue(outFileData* data, ssize_t* total, const size_t start, co
         j++;
       }
     }
-    removeEndl(data->configFile.buffer);
+    (*total) -= removeEndl(data->configFile.buffer);
     l = data->configFile.rawData[++i];
-    fprintf(stderr, "nl -> %d: %s", isLineValid(l), l);
     if (isLineValid(l) == l_varValue ) {
       j = skipWhiteSpace(l, 0);
       goto varloop;
@@ -601,11 +589,12 @@ char* readVariableName(outFileData* data, char* name) {
   while (data->configFile.rawData[i]) {
     if (isVar(data->configFile.rawData[i], name, strlen(name))) {
       fprintf(stderr, "find %zu\n", i);
-      curentLen += getValue(data, &curentLen, i, name);
+      getValue(data, &curentLen, i, name);
       break;
     }
     i++;
   }
+  printf("%s|", data->configFile.buffer);
   return data->configFile.buffer;
 }
 
