@@ -561,7 +561,7 @@ static size_t getValue(outFileData* data, ssize_t* total, const size_t start, co
     varloop:
     while (l && l[j]) {
       if (l[j] == '%') {
-        j += getValue(data, total, i, l + j + 1);
+        j += getValue(data, total, i, l + j + 1) + 1;
       }
       else {
         addToc(data->configFile.buffer, l[j], *total);
