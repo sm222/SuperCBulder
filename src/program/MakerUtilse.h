@@ -109,6 +109,7 @@ t_outVar*   makeOutVarLast(const char* name, t_outVar** list);
 void        freeOutVar(t_outVar** list);
 void        printOutVar(t_outVar* head);
 
+int         isVarInConfig(int var, t_reserveVar varList);
 
 char*       readVariable(outFileData* data, int var);
 char*       readVariableName(outFileData* data, const char* name);

@@ -12,9 +12,6 @@ static char* capName(const char* name) {
   return newName;
 }
 
-static int isVarInConfig(int var, t_reserveVar varList) {
-  return varList.varVAlue[var];
-}
 
 static ssize_t drawVarName(t_node* tmp, const char* from, const int* fd) {
   if (from)
@@ -60,14 +57,43 @@ ssize_t putAllFiles(outFileData* data, t_node* tmp, const char* from, const int 
   return t;
 }
 
+void extractVar(const char* l, size_t start, size_t *end) {
+  size_t i = 0;
+  while (l[start + i]) {
+    if (l[start + i] == ':') {
+      break ;
+    }
+    i++;
+  }
+  *end = i;
+}
+
+static bool testIsIgnore(const char* name, const char* list) {
+  if (!list)
+    return false;
+  size_t start = 0;
+  size_t end = 0;
+  while (list[start]) {
+    extractVar(list, start, &end);
+    if (strncmp(list + start, name, end) == 0)
+      return true;
+    start += end + 1;
+  }
+  return false;
+}
+
 static ssize_t  buidFileAndFolder(outFileData* data, t_node** head, const char* from, const int* fd) {
   t_node* tmp = *head;
   ssize_t t = 0;
   char folderName[MAXPATHLEN];
   bzero(folderName, MAXPATHLEN);
+  const char* ignore = NULL;
+  if (isVarInConfig(Ving, data->var)) {
+    ignore = readVariableName(data, "ING");
+  }
   while (tmp) {
     // edit that to make var unique
-    if (IS_FOLDER(tmp)) {
+    if (IS_FOLDER(tmp) && !testIsIgnore(tmp->data.name, ignore)) {
       snprintf(folderName, MAXPATHLEN, "%zu_%s", tmp->data.id, capName(tmp->data.name));
       t += drawVarName(tmp, from ,fd);
       t += buidFileAndFolder(data, &tmp->child, folderName, fd);
@@ -83,7 +109,7 @@ static ssize_t  buidFileAndFolder(outFileData* data, t_node** head, const char* 
 }
 
 
-ssize_t printRoot(const char* root, outFileData* data) {
+static ssize_t printRoot(const char* root, outFileData* data) {
   return output(data->fd, "F_%s\t\t=\t\t%s/\n", root, data->workingDirectory);
 }
 
@@ -91,7 +117,7 @@ static ssize_t readList(t_node** head, outFileData* data) {
   ssize_t t = 0;
   const int fd = data->fd;
   const char* truckPath = strrchr(data->workingDirectory, '/');
-  //! switch that line for windows or other case that path don't hold a /
+  //! switch that line for windows or other case that path don't have a /
   t += printRoot(truckPath + 1, data);
   //
   char folderName[MAXPATHLEN];
@@ -161,8 +187,10 @@ ssize_t buildMakefile(outFileData* data) {
   if (!newFile("Makefile", data))
     return -1;
   totalBytes += header(data->fd, findCommentFromType(data->outputType), getenv("USER"), hardcodePname, "Makefile");
+  totalBytes += output(data->fd, "# %d\n", data->fd);
   totalBytes += drawCompiler(data);
   totalBytes += drawName(hardcodePname, data);
+  //
   totalBytes += readList(&data->scb->node, data);
   totalBytes += drawObjectVar(data);
   totalBytes += drawMakeRule(data);

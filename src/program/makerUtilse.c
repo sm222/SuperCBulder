@@ -588,13 +588,11 @@ char* readVariableName(outFileData* data, const char* name) {
   size_t i = 0;
   while (data->configFile.rawData[i]) {
     if (isVar(data->configFile.rawData[i], name, strlen(name))) {
-      fprintf(stderr, "find %zu\n", i);
       getValue(data, &curentLen, i, name);
       break;
     }
     i++;
   }
-  printf("%s|", data->configFile.buffer);
   return data->configFile.buffer;
 }
 
@@ -616,6 +614,9 @@ char* readVariable(outFileData* data, int var) {
   return data->configFile.buffer;
 }
 
+int isVarInConfig(int var, t_reserveVar varList) {
+  return varList.varVAlue[var];
+}
 
 int makerStart(outFileData* data) {
   ssize_t outB = 0;

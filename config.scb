@@ -1,7 +1,6 @@
 NAME:scb
-#NAMEX:.out
 
-
+CC:gcc
 
 debug:  -g %test
 
@@ -19,6 +18,8 @@ test:
 
 
 ING:
+  test
+
 
 CR:
   %debug
