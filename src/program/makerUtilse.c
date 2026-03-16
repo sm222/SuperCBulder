@@ -351,7 +351,11 @@ static int openConfigFile(outFileData* data) {
   if (!data->configFile.name) {
     return 1;
   }
-  data->configFile.fd = open(data->configFile.name, O_RDONLY);
+  const size_t size = (MAXPATHLEN * 2) + 2;
+  char  path[size];
+  snprintf(path, size,"%s/%s", data->scb->originPath, data->configFile.name);
+  data->configFile.fd = open(path, O_RDONLY);
+  fprintf(stderr, "path -> %s\n", path);
   if (data->configFile.fd == 0) {
     perror("scb");
     return 1;

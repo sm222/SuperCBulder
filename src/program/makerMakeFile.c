@@ -153,7 +153,8 @@ static ssize_t drawObjectVar(outFileData* data) {
     t += output(data->fd, "\t$(O_%s)%s\n", tmp->name, tmp->next ? "\t\\" : "");
     tmp = tmp->next;
   }
-  t += output(data->fd, "\nOBJS	=	$(SRCS_FILES:.c=.o)\n\n");
+  t += output(data->fd, "\n#ty https://stackoverflow.com/questions/22499486/how-to-replace-c-and-cpp-file-together");
+  t += output(data->fd, "\nOBJS	=	$(addsuffix .o,$(basename $(SRCS_FILES)))\n\n");
   return t;
 }
 
