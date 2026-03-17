@@ -406,6 +406,17 @@ int removeEndl(char* value) {
   return 0;
 }
 
+void extractVar(const char* l, size_t start, size_t *end, char const sep) {
+  size_t i = 0;
+  while (l[start + i]) {
+    if (l[start + i] == sep) {
+      break ;
+    }
+    i++;
+  }
+  *end = i;
+}
+
 static int isVarName(char* str, const char* const* var) {
   int i = 0;
   for (; var[i]; i++) {}

@@ -109,6 +109,8 @@ void        closeFile(outFileData* data);
 char*       findCommentFromType(int type);
 
 
+void        extractVar(const char* l, size_t start, size_t *end, char const sep);
+
 t_outVar*   makeOutVarLast(const char* name, t_outVar** list);
 void        freeOutVar(t_outVar** list);
 void        printOutVar(t_outVar* head);

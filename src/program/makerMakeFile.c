@@ -60,16 +60,6 @@ ssize_t putAllFiles(outFileData* data, t_node* tmp, const char* from, const int 
   return t;
 }
 
-void extractVar(const char* l, size_t start, size_t *end) {
-  size_t i = 0;
-  while (l[start + i]) {
-    if (l[start + i] == ':') {
-      break ;
-    }
-    i++;
-  }
-  *end = i;
-}
 
 static bool testIsIgnore(const char* name, const char* list) {
   if (!list)
@@ -77,7 +67,7 @@ static bool testIsIgnore(const char* name, const char* list) {
   size_t start = 0;
   size_t end = 0;
   while (list[start]) {
-    extractVar(list, start, &end);
+    extractVar(list, start, &end, ';');
     if (strncmp(list + start, name, end) == 0) {
       fprintf(stderr, "skip > %s\n", name);
       return true;
