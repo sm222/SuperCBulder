@@ -1,5 +1,9 @@
-fix c and cpp conflic 
-config file, add \n \%
-clean code,
-try to make bash file,
-add flags,
+[x]fix c and cpp conflic 
+[ ]config file, add \n \%
+[ ]clean code,
+[ ]try to make bash file,
+[ ]add flags,
+[x]build icefactory
+[ ]add sh output
+[ ]add cmake output
+[ ]better doc 

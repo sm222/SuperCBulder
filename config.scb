@@ -17,6 +17,14 @@ test:
 # if no default and no case is catch var woud be empty
 
 
+foo:1
+
+bar:2
+  %baz
+
+baz:3
+ %foo
+
 ING:
   test
 
@@ -26,4 +34,4 @@ PROG:
   %default
 
 DEP:
-  @echo hello world!
+  @echo foo %foo bar %bar baz %baz
