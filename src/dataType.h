@@ -33,6 +33,7 @@
 #  define SYSTYPE SYS_MAC
 # else
 #  define SYSTYPE -1
+#  error  "system not suported"
 # endif
 
 # ifndef FILE_SEP

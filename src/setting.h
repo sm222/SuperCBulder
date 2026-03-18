@@ -3,6 +3,6 @@
 
 # ifdef SETUP_EXTERN
   int setStart(void*);
-#endif
+# endif
 
 #endif

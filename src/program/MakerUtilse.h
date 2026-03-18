@@ -50,9 +50,22 @@ static const char* const reserveVarName[] = {
   "DEP",
   "PROG",
   "LIB",
-  "BUPLIB",
+  "SHELL",
   0x0,
 };
+
+static const char* const keyWords[] = {
+  "LINUX ",
+  "WINDOWS ",
+  "MACOS ",
+  "ENV_",
+  "SHELL ",
+  0x0,
+};
+
+
+//3 os, strat at 0 in keyWords
+# define NUMBER_OF_OS 3 
 
 # define MAX_VAR_NAME_LEN (PATH_MAX * 4)
 
@@ -74,7 +87,7 @@ enum varReserveName {
   Vdep,
   Vprog,
   Vlib,
-  Vpublib,
+  Vshell,
 };
 
 typedef struct s_reserveVar {
@@ -86,6 +99,7 @@ typedef struct {
   bool        cpp;
   int         fd;
   t_SCB*      scb;
+  short       target; // linux, windows, mac
   int         outputType;
   char*       workingDirectory;
   char*       config[PATH_MAX];

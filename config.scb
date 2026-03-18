@@ -16,13 +16,14 @@ test:
 
 # if no default and no case is catch var woud be empty
 
+_SHELL echo a
 
-foo:1
+foo:A
 
-bar:2
+bar:B
   %baz
 
-baz:3
+baz:C
  %foo
 
 ING:
@@ -33,5 +34,10 @@ PROG:
   %debug
   %default
 
+sys:
+  %_LINUXX linux heh
+  %_WINDOWS B
+  %_MACOS C
+
 DEP:
-  @echo foo %foo bar %bar baz %baz
+  echo foo %foo bar %bar baz %baz %sys

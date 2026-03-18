@@ -203,6 +203,7 @@ outFileData makerSetup(t_SCB* in, int mode) {
   data.scb = in;
   data.outputType = mode;
   data.workingDirectory = in->path;
+  data.target = SYSTYPE;
   return data;
 }
 
@@ -443,11 +444,9 @@ static int checkVar(outFileData* data) {
       fprintf(stderr, "%s:%zu\n",data->configFile.name, i + 1);
       return 1;
     }
-    if (data->var.varVAlue[Vprog] + \
-      data->var.varVAlue[Vlib] + \
-      data->var.varVAlue[Vpublib] > 1) {
-        fprintf(stderr, MULT_COMPILE_RULE);
-        return 1;
+    if (data->var.varVAlue[Vprog] + data->var.varVAlue[Vlib] > 1) {
+      fprintf(stderr, MULT_COMPILE_RULE);
+      return 1;
     }
   }
   return 0;
@@ -495,6 +494,7 @@ enum {
   L_var      =  2,
   l_varValue =  3,
   l_invalid  =  4,
+  l_shell    =  5,
 };
 
 static inline bool valid(int prev, int now) {
@@ -509,10 +509,15 @@ static inline bool valid(int prev, int now) {
   return now >= 0 ? true : false;
 }
 
+static int isLineShell(const char* s) {
+  return ((strncmp(s, "_SHELL", 6) == 0 && isspace(s[6])) ? l_shell : l_invalid);
+}
+
 static int isLineValid(const char* s) {
   int lineType = s ? L_unknown : L_empty;
   if (s) {
     if (*s == '#' || *s == '\n') { return L_comment; }
+    else if (*s == '_') { return isLineShell(s);}
     else if (isdigit(*s) || *s == ':') { return l_invalid; }
     else if (isspace(*s)) { lineType = l_varValue; }
     else if (isalpha(*s)) { lineType = L_var; }
@@ -549,9 +554,33 @@ int checkIfFileValid(outFileData* data) {
   return 0;
 }
 
-//static bool checkToc(const char* s) {
-//  return (*s == '\\' && *(s + 1) == '%');
-//}
+static size_t getKeyWordLen(const char* keyword) {
+  size_t i = 0;
+  while (!isspace(keyword[i])) {
+    i++;
+  }
+  return i;
+}
+
+
+static int testKeyWord(outFileData* data, const char* s, size_t* dis) {
+  const size_t len = getKeyWordLen(s);
+  *dis += len;
+  short i = 0;
+  for ( ; keyWords[i]; i++) {
+    if (strncmp(s, keyWords[i], len) == 0) {
+      break ;
+    }
+  }
+  // test system target
+  if (i <= NUMBER_OF_OS - 1) {
+    return !(data->target == i);
+  }
+  //! debug
+  fprintf(stderr, "KEY WORD = %.*s\n", (int)len, s);
+  
+  return 0;
+}
 
 static size_t getValue(outFileData* data, ssize_t* total, const size_t start, const char* name) {
   if (*total >= MAX_VAR_NAME_LEN)
@@ -570,12 +599,19 @@ static size_t getValue(outFileData* data, ssize_t* total, const size_t start, co
   do {
     nlValid = false;
     while (l && l[j]) {
-      if (l[j] == '%') {
+      if (l[j] == '\\' && l[j + 1] == '%') {
+        addToc(data->configFile.buffer, '%', (*total)++);
+        j += 2;
+      }
+      else if (l[j] == '%') {
+        if (l[j + 1] == '_') {
+          if (testKeyWord(data, l + j + 2, &j))
+            break ;
+        }
         j += getValue(data, total, i, l + j + 1) + 1;
       }
       else {
-        addToc(data->configFile.buffer, l[j], *total);
-        (*total)++;
+        addToc(data->configFile.buffer, l[j], (*total)++);
         j++;
       }
     }
