@@ -35,7 +35,7 @@ PROG:
   %default
 
 sys:
-  %_LINUXX linux heh
+  %_LINUX linux heh
   %_WINDOWS B
   %_MACOS C
 

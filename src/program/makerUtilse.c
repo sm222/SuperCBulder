@@ -476,10 +476,6 @@ size_t skipWhiteSpace(const char* s, size_t start) {
   return i;
 }
 
-bool isLinux(const char* var) {
-  const int v = strncmp(var, "LINUX", 5);
-  return (v == 0 && isspace(var[5]));
-}
 
 static inline ssize_t findVarLen(const char*s) {
   ssize_t i = 0;
@@ -517,7 +513,7 @@ static int isLineValid(const char* s) {
   int lineType = s ? L_unknown : L_empty;
   if (s) {
     if (*s == '#' || *s == '\n') { return L_comment; }
-    else if (*s == '_') { return isLineShell(s);}
+    else if (*s == '_') { return isLineShell(s); }
     else if (isdigit(*s) || *s == ':') { return l_invalid; }
     else if (isspace(*s)) { lineType = l_varValue; }
     else if (isalpha(*s)) { lineType = L_var; }
@@ -562,24 +558,30 @@ static size_t getKeyWordLen(const char* keyword) {
   return i;
 }
 
+static void readEnv(outFileData* data, const char* s, size_t* total) {
+  size_t i = 0;
+  while () {
+  
+  }
+}
 
-static int testKeyWord(outFileData* data, const char* s, size_t* dis) {
+static int testKeyWord(outFileData* data, const char* s, size_t* dis, size_t* total) {
   const size_t len = getKeyWordLen(s);
   *dis += len;
   short i = 0;
   for ( ; keyWords[i]; i++) {
-    if (strncmp(s, keyWords[i], len) == 0) {
-      break ;
-    }
+    const size_t lenKeyword = strlen(keyWords[i]);
+    if (strncmp(s, keyWords[i], lenKeyword) == 0) { break ; }
   }
   // test system target
   if (i <= NUMBER_OF_OS - 1) {
     return !(data->target == i);
   }
-  //! debug
-  fprintf(stderr, "KEY WORD = %.*s\n", (int)len, s);
-  
-  return 0;
+  if (i == k_env) {
+    readEnv(data, s, total);
+    return 0;
+  }
+  return 1;
 }
 
 static size_t getValue(outFileData* data, ssize_t* total, const size_t start, const char* name) {
