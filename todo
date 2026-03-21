@@ -19,10 +19,10 @@ configfile --
 [ ]look for dup name in user var
 [ ]make better file promp choise
 [ ]add a better delult configfile
-[ ]define value for the default variable
 [ ]config file, add \n \%
 
 done
 [x]build icefactory
 [x]fix c and cpp conflic
 [x]fix variable reading bug
+[x]define value for the default variable

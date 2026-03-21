@@ -167,19 +167,20 @@ size_t output(int fd, const char * s, ...) {
 
 #include <time.h>
 
-size_t header(int fd, const char* comment, const char* uName, const char* pName, const char* fType) {
+size_t header(outFileData* data, const char* comment, const char* uName, const char* pName, const char* fType) {
   time_t rawtime;
   struct tm* timeinfo;
   time(&rawtime);
   const char* maker = uName ? uName : "unknown";
   timeinfo = localtime(&rawtime);
   size_t out = 0;
-  out += output(fd, "%s - %s - %s\n", comment, comment, comment);
-  out += output(fd, "%s %s Make whit scb on %s",comment, fType, asctime(timeinfo));
-  out += output(fd, "%s build by %s\n", comment, maker);
-  out += output(fd, "%s project name -> %s\n", comment, pName);
-  out += output(fd, "%s - %s - %s\n", comment, comment, comment);
-  out += output(fd, "\n\n");
+  out += output(data->fd, "%s - %s - %s\n", comment, comment, comment);
+  out += output(data->fd, "%s %s Make whit scb on %s",comment, fType, asctime(timeinfo));
+  out += output(data->fd, "%s build by %s\n", comment, maker);
+  out += output(data->fd, "%s project name -> %s\n", comment, pName);
+  out += output(data->fd, "%s config file -> %s\n", comment, data->configFile.name);
+  out += output(data->fd, "%s - %s - %s\n", comment, comment, comment);
+  out += output(data->fd, "\n\n");
   return out;
 }
 
@@ -594,22 +595,32 @@ static int testKeyWord(outFileData* data, const char* s, size_t* dis, ssize_t* t
 }
 
 //! add suport for default value
-/*
-static bool IsKnowVar(const char* name, const size_t varlen) {
+static bool IsKnowVar(outFileData* data, ssize_t* total, const size_t varlen, const char* name) {
   size_t i = 0;
   while (reserveVarName[i]) {
-    if (strncmp(name, reserveVarName[i], varlen) == 0)
-    return true;
+    if (strncmp(name, reserveVarName[i], varlen) == 0) {
+      if (isVarInConfig(i, data->var)) {
+        return false;
+      }
+      else {
+        addTo(data->configFile.buffer, reserveVarNameDefaultValue[i], total);
+        return true;
+      }
+    }
+    i++;
   }
+  return false;
 }
-*/
+
 
 static size_t getValue(outFileData* data, ssize_t* total, const size_t start, const char* name) {
   if (*total >= MAX_VAR_NAME_LEN)
     return 0;
-  const size_t nameLen = findVarLen(name);
   size_t i = 0;
   const char* l = NULL;
+  const size_t nameLen = findVarLen(name);
+  if (IsKnowVar(data, total, nameLen, name))
+    return nameLen;
   while (data->configFile.rawData[i]) {
     l = data->configFile.rawData[i];
     if (i > start) { return nameLen; }
@@ -650,24 +661,26 @@ static size_t getValue(outFileData* data, ssize_t* total, const size_t start, co
 }
 
 
-
+//* return value from file or default value
 char* readVariableName(outFileData* data, e_reserveVarName name) {
   bzero(data->configFile.buffer, MAX_VAR_NAME_LEN);
   size_t i = 0;
   ssize_t curentLen = 0;
   const size_t len = strlen(reserveVarName[name]);
-  while (data->configFile.rawData[i]) {
-    if (isVar(data->configFile.rawData[i], reserveVarName[name], len)) {
-      getValue(data, &curentLen, i, reserveVarName[name]);
-      break;
+  if (isVarInConfig(name, data->var)) {
+    while (data->configFile.rawData[i]) {
+      if (isVar(data->configFile.rawData[i], reserveVarName[name], len)) {
+        getValue(data, &curentLen, i, reserveVarName[name]);
+        break;
+      }
+      i++;
     }
-    i++;
   }
-  //else {
-  //  fprintf(stderr, "YES\n");
-  //  const size_t valueLen = strlen(reserveVarNameDefaultValue[name]);
-  //  memcpy(data->configFile.buffer, reserveVarNameDefaultValue[name], valueLen);
-  //}
+  else {
+    //* safe because default value don't have token
+    const size_t valueLen = strlen(reserveVarNameDefaultValue[name]);
+    memcpy(data->configFile.buffer, reserveVarNameDefaultValue[name], valueLen);
+  }
   return data->configFile.buffer;
 }
 

@@ -16,18 +16,22 @@ inline static short printnl(const int fd) {
   return write(fd, "\n", 1);
 }
 
+static int getNumberTab(const char* s) {
+  int l = 11 - strlen(s);
+  return l / 2;
+}
+
 static ssize_t drawVarName(t_node* tmp, const char* from, const int* fd) {
   if (from)
     return output(*fd, "F_%zu_%s\t\t=\t\t$(F_%s)%s/\n\n", tmp->data.id, capName(tmp->data.name), from ,tmp->data.name);
   return output(*fd, "F_%zu_%s\t\t=\t\t%s/\n\n", tmp->data.id, capName(tmp->data.name), tmp->data.name);
 }
 
-static ssize_t drawVar(outFileData* data, const int name, const char* defaultValue) {
-  const char* val = defaultValue;
-  if (isVarInConfig(name, data->var)) {
-    val =  readVariableName(data, name);
-  }
-  return output(data->fd, "%s\t\t=\t\t%s\n", reserveVarName[name], val);
+static ssize_t drawVar(outFileData* data, const int name) {
+  const char* val =  readVariableName(data, name);
+  const int tabSize = getNumberTab(reserveVarName[name]);
+  const char* tabs = "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t";
+  return output(data->fd, "%s%.*s=\t\t%s\n",reserveVarName[name], tabSize, tabs, val);
 }
 
 static bool isNextFileValid(t_node* node) {
@@ -123,8 +127,12 @@ static ssize_t readList(t_node** head, outFileData* data) {
 
 ssize_t drawName(const char* name, outFileData* data) {
   ssize_t t = 0;
-  t += drawVar(data, Vname, name);
-  t += drawVar(data, Vnamex, "");
+  if (isVarInConfig(Vname, data->var))
+    t += drawVar(data, Vname);
+  else
+    t += output(data->fd, "NAME\t\t=\t\t%s\n", name);
+  //
+  t += drawVar(data, Vnamex);
   t += output(data->fd, "\n\n");
   return t;
 }
@@ -132,12 +140,12 @@ ssize_t drawName(const char* name, outFileData* data) {
 
 static ssize_t drawCompiler(outFileData* data) {
   ssize_t total = 0;
-  total += drawVar(data, Vcc, "cc");
-  total += drawVar(data, Vcxx, "c++");
+  total += drawVar(data, Vcc);
+  total += drawVar(data, Vcxx);
   //! remove later v
   total += output(data->fd, "\n\nDEBUG\t\t\t=\t\t-g\n\n");
-  total += drawVar(data, VCFLAGS, "-Wall -Werror -Wextra $(DEBUG)");
-  total += drawVar(data, VCXXFLAGS, "-Wall -Werror -Wextra $(DEBUG)");
+  total += drawVar(data, VCFLAGS);
+  total += drawVar(data, VCXXFLAGS);
   total += output(data->fd, "\n\n\n");
   return total;
 }
@@ -218,8 +226,7 @@ ssize_t buildMakefile(outFileData* data) {
   const char* hardcodePname = strrchr(data->scb->originPath, FILE_SEP) + 1;
   if (!newFile("Makefile", data))
     return -1;
-  totalBytes += header(data->fd, findCommentFromType(data->outputType), getenv("USER"), hardcodePname, "Makefile");
-  totalBytes += output(data->fd, "# %d\n", data->fd);
+  totalBytes += header(data, findCommentFromType(data->outputType), getenv("USER"), hardcodePname, "Makefile");
   totalBytes += drawCompiler(data);
   totalBytes += drawName(hardcodePname, data);
   //

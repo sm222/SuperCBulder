@@ -2,6 +2,7 @@
 
 NAME:scb
 
+SHELL:bash
 
 DEP:
-  echo %CC %CXX %CFLAGS %CXXFLAGS %SHELL
+  %SHELL echo %CC %CXX %CFLAGS %CXXFLAGS %SHELL

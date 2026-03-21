@@ -54,18 +54,24 @@ static const char* const reserveVarName[] = {
   0x0,
 };
 
+
+/*
+! no tokens can ever be put in those string
+! getValue from readVariableName will not follow token if
+! the default value is read
+*/
 static const char* const reserveVarNameDefaultValue[] = {
-  "cc",
-  "c++",
-  "",
-  "",
-  "-Wall -Werror -Wextra",
-  "-Wall -Werror -Wextra",
-  "",
-  "",
-  "",
-  "",
-  "sh",
+  "cc",                   // cc
+  "c++",                  // cxx
+  "",                     //name
+  "",                     //namex
+  "-Wall -Werror -Wextra",//ccflags
+  "-Wall -Werror -Wextra",//cxxflags
+  "",                     //ing
+  "",                     //dep
+  "",                     //prog
+  "",                     //lib
+  "sh",                   //shell
   0x0,
 };
 
@@ -144,7 +150,7 @@ outFileData  makerSetup(t_SCB* in, int mode);
 int          makerStart(outFileData* data);
 
 size_t      output(int fd, const char* s, ...);
-size_t      header(int fd, const char* comment, const char* uName, const char* pName, const char* fType);
+size_t      header(outFileData* data, const char* comment, const char* uName, const char* pName, const char* fType);
 
 bool        newFile(char* name, outFileData* data);
 void        closeFile(outFileData* data);
