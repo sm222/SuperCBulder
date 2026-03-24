@@ -11,6 +11,9 @@
 
 # define ENDL(c)    ((c == '\n') || (c == '\0'))
 
+# define TOKENSIZE 1
+# define B
+
 # define NO_CONFIG_FILE "no config file found," \
   " you want to make one or continue whit out it?"
 
@@ -20,6 +23,18 @@
 
 # define MULT_COMPILE_RULE "scb: multiple compile rule define," \
   " only one at the time can be use\n"
+
+
+enum {
+  L_unknown  = -1,
+  L_empty    =  0,
+  L_comment  =  1,
+  L_var      =  2,
+  L_varValue =  3,
+  L_invalid  =  4,
+};
+
+
 
 enum {
   makefile = 0,

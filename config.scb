@@ -16,7 +16,7 @@ test:
 
 # if no default and no case is catch var woud be empty
 
-_SHELL echo a
+
 
 foo:A 
 

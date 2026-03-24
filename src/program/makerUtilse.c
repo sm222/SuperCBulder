@@ -493,21 +493,23 @@ static inline ssize_t findVarLen(const char* s) {
   return i;
 }
 
-enum {
-  L_unknown  = -1,
-  L_empty    =  0,
-  L_comment  =  1,
-  L_var      =  2,
-  l_varValue =  3,
-  l_invalid  =  4,
-  l_shell    =  5,
-};
+static void getParsingError(int type) {
+  if (type < 0)
+    type *= -1;
+  const char* line = "";
+  if (type == L_invalid || type == L_unknown) {
+    line = "line is invalid\n";
+  }
+  else if (type == L_var) { line = "invalid variable\n";}
+  else if (type == L_varValue) { line = "floting value\n"; }
+  fprintf(stderr,"%s\n", line);
+}
 
 static inline bool valid(int prev, int now) {
-  if (now == l_invalid || now == L_unknown)
+  if (now == L_invalid || now == L_unknown)
     return false;
-  if (now == l_varValue) {
-    if (prev == L_var || prev == l_varValue) {
+  if (now == L_varValue) {
+    if (prev == L_var || prev == L_varValue) {
       return true;
     }
     return false;
@@ -515,24 +517,22 @@ static inline bool valid(int prev, int now) {
   return now >= 0 ? true : false;
 }
 
-static int isLineShell(const char* s) {
-  return ((strncmp(s, "_SHELL", 6) == 0 && isspace(s[6])) ? l_shell : l_invalid);
-}
-
 static int isLineValid(const char* s) {
   int lineType = s ? L_unknown : L_empty;
   if (s) {
     if (*s == '#' || *s == '\n') { return L_comment; }
-    else if (*s == '_') { return isLineShell(s); }
-    else if (isdigit(*s) || *s == ':') { return l_invalid; }
-    else if (isspace(*s)) { lineType = l_varValue; }
-    else if (isalpha(*s)) { lineType = L_var; }
+    else if (isdigit(*s) || *s == ':' ) { return L_invalid; }
+    else if (isspace(*s))  { lineType = L_varValue; }
+    else if (isalpha(*s))  { lineType = L_var; }
+    else if (!isalpha(*s)) { return  L_invalid; }
     size_t i = 0;
     while (s[i]) {
-      if ((!isspace(s[i]) && lineType == l_varValue) || \
+      if ((!isspace(s[i]) && lineType == L_varValue) || \
       (s[i] == ':' && lineType == L_var)) {
         return lineType;
       }
+      if (isspace(s[i]) && lineType == L_var)
+        break ;
       i++;
     }
     lineType *= -1; //! flip value to show error
@@ -551,7 +551,9 @@ int checkIfFileValid(outFileData* data) {
     const int line = isLineValid(l);
     if (!valid(prev, line)) {
       //! add better error message
-      fprintf(stderr, "scb: invalid config file\n[%zu]%s\n", i + 1, l);
+      fprintf(stderr, "scb: invalid config file\n" \
+        "%s:%zu - > %s\n", data->configFile.name, i + 1, l);
+      getParsingError(line);
       return 1;
     }
     i++;
@@ -569,7 +571,7 @@ static void readEnv(outFileData* data, const char* s, ssize_t* total) {
   const size_t varLen = findVarLen(s);
   while (env[i]) {
     if (strncmp(env[i], s, varLen) == 0 && env[i][varLen] == '=') {
-      addTo(data->configFile.buffer, env[i] + varLen + 1, total);
+      addTo(data->configFile.buffer, env[i] + varLen + TOKENSIZE, total);
     }
     i++;
   }
@@ -643,7 +645,7 @@ static size_t getValue(outFileData* data, ssize_t* total, const size_t start, co
           if (testKeyWord(data, l + j + 2, &j, total))
             break ;
         }
-        j += getValue(data, total, i, l + j + 1) + 1;
+        j += getValue(data, total, i, l + j + TOKENSIZE) + TOKENSIZE;
       }
       else {
         addToc(data->configFile.buffer, l[j], (*total)++);
@@ -652,7 +654,7 @@ static size_t getValue(outFileData* data, ssize_t* total, const size_t start, co
     }
     (*total) -= removeEndl(data->configFile.buffer);
     l = data->configFile.rawData[++i];
-    if (isLineValid(l) == l_varValue) {
+    if (isLineValid(l) == L_varValue) {
       j = skipWhiteSpace(l, 0);
       nlValid = true;
     }

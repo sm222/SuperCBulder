@@ -76,7 +76,7 @@ static bool testIsIgnore(const char* name, const char* list) {
       fprintf(stderr, "skip > %s\n", name);
       return true;
     }
-    start += end + 1;
+    start += end + TOKENSIZE;
   }
   return false;
 }
@@ -173,7 +173,7 @@ static ssize_t drawDep(outFileData* data) {
   while (depValue[start]) {
     extractVar(depValue, start, &end, ';');
     t += output(data->fd, "\t%.*s\n", (int)end, depValue + start);
-    start += end + 1;
+    start += end + TOKENSIZE;
   }
   printNl(data->fd);
   return t;

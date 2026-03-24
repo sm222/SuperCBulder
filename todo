@@ -28,3 +28,4 @@ done
 [x]fix variable reading bug
 [x]define value for the default variable
 [x]fix a other bug for reading variable
+[x]clean error message, and make variable readding better
