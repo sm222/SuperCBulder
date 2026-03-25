@@ -38,13 +38,13 @@ enum {
 
 enum {
   makefile = 0,
-  bash     = 1,
+  sh       = 1,
   cmake    = 2,
 };
 
 static const char* const buildFileLanguage[] = {
   "Makefile:#",
-  "bash:#",
+  "sh:#",
   "?:#",
   0x0,
 };

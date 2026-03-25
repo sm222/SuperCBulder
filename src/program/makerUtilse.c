@@ -714,7 +714,7 @@ int makerStart(outFileData* data) {
   //! printVar(data); !add flag for showing it
   if (data->outputType == makefile && !error) {
     outB = buildMakefile(data);
-  } else if (data->outputType == bash && !error) {
+  } else if (data->outputType == sh && !error) {
     outB = buildBash(data);
   }else {
     fprintf(stderr, "scb: file type unknown\n" \

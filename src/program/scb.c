@@ -121,9 +121,8 @@ int mapDir(const char* path, t_node** head, unsigned int maxDep) {
 
 # include "MakerUtilse.h"
 
-static int grabAv(t_SCB* setting, const int avSize) {
+static int grabAv(t_SCB* setting) {
   setting->buildType = av_read(&setting->mainData->avNoFlags, 1);
-  fprintf(stderr, "[%d]%s <>\n", avSize, setting->buildType);
   return 0;
 }
 
@@ -142,7 +141,7 @@ static int setup(t_SCB* setting, void* mainData) {
     return 1;
   }
   if (avNb > 1) {
-    grabAv(setting, avNb);
+    grabAv(setting);
   }
   getcwd(setting->path, PATH_MAX);
   return 0;
@@ -189,7 +188,8 @@ int scb(void* data) {
     return 1;
   }
   //
-  SCB.error = mapDir(SCB.path, &SCB.node, 30);
+  int maxDep = 30;
+  SCB.error = mapDir(SCB.path, &SCB.node, maxDep);
   chdir(SCB.originPath);
   if (!SCB.error) {
     moveFolderUp(&SCB.node);
