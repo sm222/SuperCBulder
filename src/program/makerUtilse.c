@@ -439,11 +439,12 @@ static int checkVar(outFileData* data) {
     else if (res >= 0) {
       fprintf(stderr, "scb: %s redeclare var at ->\n", reserveVarName[res]);
       fprintf(stderr, "%s:%zu\n",data->configFile.name, i + 1);
-      return 1;
+      return 2;
     }
-    if (data->var.varVAlue[Vprog] + data->var.varVAlue[Vlib] > 1) {
+    const bool* array = data->var.varVAlue;
+    if (array[Vprog] + array[Vlib]  + array[Vdlib] > 1) {
       fprintf(stderr, MULT_COMPILE_RULE);
-      return 1;
+      return 3;
     }
   }
   return 0;
@@ -716,9 +717,11 @@ int makerStart(outFileData* data) {
     outB = buildMakefile(data);
   } else if (data->outputType == sh && !error) {
     outB = buildBash(data);
-  }else {
-    fprintf(stderr, "scb: file type unknown\n" \
-    "type was [%d]\n", data->outputType);
+  } else {
+    const char* msg = "";
+    if (error) {  msg = ERROR_FILE; }
+    else { msg = UNKNOWN_TYPE; }
+    fprintf(stderr, msg, data->outputType);
   }
   closeConfigFile(data);
   printf("total byte prints > %zu\n", outB);

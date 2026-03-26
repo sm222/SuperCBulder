@@ -24,6 +24,8 @@
 # define MULT_COMPILE_RULE "scb: multiple compile rule define," \
   " only one at the time can be use\n"
 
+# define UNKNOWN_TYPE "scb: file type unknown\ntype was [%d]\n"
+# define ERROR_FILE "error while parsing\ncode was [%d]\n"
 
 enum {
   L_unknown  = -1,
@@ -37,9 +39,10 @@ enum {
 
 
 enum {
-  makefile = 0,
-  sh       = 1,
-  cmake    = 2,
+  makefile =  0,
+  sh       =  1,
+  cmake    =  2,
+  notype   = -1,
 };
 
 static const char* const buildFileLanguage[] = {
@@ -117,8 +120,14 @@ static const char* const keyWords[] = {
   0x0,
 };
 
-
-
+//*Static Library
+// ar rcs name|namex files
+//
+//Shared (Dynamic) 
+//gcc -c -fPIC mylib.c -o mylib.o
+//gcc -shared -o libmylib.so mylib.o
+//
+//* https://www.geeksforgeeks.org/c/how-do-i-create-a-library-in-c/
 
 enum {
   k_linux   = 0,

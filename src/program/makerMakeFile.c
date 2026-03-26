@@ -174,10 +174,32 @@ static ssize_t drawDep(outFileData* data) {
   return t;
 }
 
+static ssize_t drawProg(outFileData* data, const char* const compiler, const bool prog) {
+  ssize_t t = 0;
+  t += output(data->fd, "$(NAME): $(%s)\n\n", compiler);
+  t += output(data->fd, "$(%s): $(OBJS)\n\t$(%s) $(CFLAGS) $(OBJS)", compiler, compiler);
+  if (prog) {
+    const char* const progVar = readVariableName(data, Vprog);
+    t += output(data->fd, " %s ", progVar);
+  }
+  t += output(data->fd, " -o $(NAME)$(NAMEX)\n\n");
+  return t;
+}
+
+static ssize_t drawlib(outFileData* data, const char* const ar) {
+  ssize_t t = 0;
+  t += output(data->fd, "$(NAME): $(OBJS)\n");
+  t += output(data->fd, "\t%s $(NAME)$(NAMEX) ", ar);
+  t += output(data->fd, "$(OBJS)\n\n");
+  return t;
+}
+
 static ssize_t drawMakeRule(outFileData* data) {
   ssize_t t = 0;
-  const bool dep = isVarInConfig(Vdep, data->var);
+  const bool dep  = isVarInConfig(Vdep, data->var);
   const bool prog = isVarInConfig(Vprog, data->var);
+  const bool lib  = isVarInConfig(Vlib, data->var);
+  const bool dlib = isVarInConfig(Vdlib, data->var);
   const char* const compiler = data->cpp ? "CXX" : "CC";
   t += output(data->fd, "#is cpp: %s\n\n", data->cpp ? "yes" : "no");
   t += output(data->fd, "all: ");
@@ -185,15 +207,14 @@ static ssize_t drawMakeRule(outFileData* data) {
     t += output(data->fd, "dep ");
   }
   t += output(data->fd, "$(NAME)\n\n");
-  t += output(data->fd, "$(NAME): $(%s)\n\n", compiler);
-  //! add lib buid here for .so or .a
-  t += output(data->fd, "$(%s): $(OBJS)\n\t$(%s) $(CFLAGS) $(OBJS)", compiler, compiler);
-  //!add more var if needed
-  if (prog) {
-    const char* const progVar = readVariableName(data, Vprog);
-    t += output(data->fd, " %s ", progVar);
+  if (prog || (!lib && !dlib)) {
+    t += drawProg(data, compiler, prog);
   }
-  t += output(data->fd, " -o $(NAME)$(NAMEX)\n\n");
+  if (lib) {
+    t += drawlib(data, "ar rcs");
+  }
+  //! add lib buid here for .so or .a
+  //!add more var if needed
   if (dep) {
     //* make dep rule
     t += drawDep(data);
