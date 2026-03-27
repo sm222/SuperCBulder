@@ -591,6 +591,10 @@ static int testKeyWord(outFileData* data, const char* s, size_t* dis, ssize_t* t
     readEnv(data, s, total);
     return 0;
   }
+  if (i == k_shell) {
+    //data->shellFt(data, total, start, s);
+    fprintf(stderr, "shell!!\n");
+  }
   return 1;
 }
 
@@ -640,7 +644,7 @@ static size_t getValue(outFileData* data, ssize_t* total, const size_t start, co
       }
       else if (l[j] == '%') {
         if (l[j + 1] == '_') {
-          if (testKeyWord(data, l + j + 2, &j, total))
+          if (testKeyWord(data, l + j + (TOKENSIZE * 2), &j, total))
             break ;
         }
         j += getValue(data, total, i, l + j + TOKENSIZE) + TOKENSIZE;

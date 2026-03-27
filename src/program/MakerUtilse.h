@@ -120,6 +120,8 @@ static const char* const keyWords[] = {
   0x0,
 };
 
+# define SHELL_KEYWORD 5
+
 //*Static Library
 // ar rcs name|namex files
 //
@@ -155,7 +157,7 @@ typedef struct s_reserveVar {
   bool  varVAlue[sizeof(reserveVarName) / sizeof(char*)];
 } t_reserveVar;
 
-typedef void(*shellCall)(void*, ssize_t*, const char*);
+typedef void(*shellCall)(void*, ssize_t*, ssize_t ,const char*);
 
 typedef struct {
   bool        cpp;
@@ -170,6 +172,7 @@ typedef struct {
   t_reserveVar  var;
   t_configValue configFile;
   shellCall     shellFt;
+  char          shellEnd[10];
 } outFileData;
 
 outFileData  makerSetup(t_SCB* in, int mode);
@@ -179,8 +182,6 @@ short       printNl(const int fd);
 size_t      output(int fd, const char* s, ...);
 size_t      header(outFileData* data, const char* comment, const char* uName, const char* pName, const char* fType);
 
-bool        newFile(char* name, outFileData* data);
-void        closeFile(outFileData* data);
 
 char*       findCommentFromType(int type);
 
@@ -191,10 +192,13 @@ t_outVar*   makeOutVarLast(const char* name, t_outVar** list);
 void        freeOutVar(t_outVar** list);
 void        printOutVar(t_outVar* head);
 
-int         isVarInConfig(int var, t_reserveVar varList);
 
 char*       readVariableName(outFileData* data, e_reserveVarName name);
 
+bool        newFile(char* name, outFileData* data);
+void        closeFile(outFileData* data);
+//
+int         isVarInConfig(int var, t_reserveVar varList);
 int         removeEndl(char* value);
 
 

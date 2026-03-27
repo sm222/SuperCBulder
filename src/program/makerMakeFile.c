@@ -79,8 +79,7 @@ static bool testIsIgnore(const char* name, const char* list) {
 static ssize_t  buidFileAndFolder(outFileData* data, t_node** head, const char* from, const int* fd) {
   t_node* tmp = *head;
   ssize_t t = 0;
-  char folderName[MAXPATHLEN];
-  bzero(folderName, MAXPATHLEN);
+  char folderName[MAXPATHLEN * 2];
   const char* ignore = NULL;
   if (isVarInConfig(Ving, data->var)) {
     ignore = readVariableName(data, Ving);
@@ -88,7 +87,7 @@ static ssize_t  buidFileAndFolder(outFileData* data, t_node** head, const char* 
   while (tmp) {
     // edit that to make var unique
     if (IS_FOLDER(tmp) && !testIsIgnore(tmp->data.name, ignore)) {
-      snprintf(folderName, MAXPATHLEN, "%zu_%s", tmp->data.id, capName(tmp->data.name));
+      snprintf(folderName, MAXPATHLEN * 2, "%zu_%s", tmp->data.id, capName(tmp->data.name));
       t += drawVarName(tmp, from ,fd);
       t += buidFileAndFolder(data, &tmp->child, folderName, fd);
       t += printNl(*fd);
@@ -114,8 +113,8 @@ static ssize_t readList(t_node** head, outFileData* data) {
   //! switch that line for windows or other case that path don't have a /
   t += printRoot(truckPath + 1, data);
   //
-  char folderName[MAXPATHLEN];
-  snprintf(folderName, MAXPATHLEN, "%s", truckPath + 1);
+  char folderName[MAXPATHLEN * 2];
+  snprintf(folderName, MAXPATHLEN * 2, "%s", truckPath + 1);
   t += buidFileAndFolder(data, head, folderName, &fd);
   return t;
 }
@@ -189,8 +188,7 @@ static ssize_t drawProg(outFileData* data, const char* const compiler, const boo
 static ssize_t drawlib(outFileData* data, const char* const ar) {
   ssize_t t = 0;
   t += output(data->fd, "$(NAME): $(OBJS)\n");
-  t += output(data->fd, "\t%s $(NAME)$(NAMEX) ", ar);
-  t += output(data->fd, "$(OBJS)\n\n");
+  t += output(data->fd, "\t%s $(NAME)$(NAMEX) $(OBJS)\n\n", ar);
   return t;
 }
 
@@ -232,27 +230,23 @@ static ssize_t drawEnd(outFileData* data) {
 
 
 //! need to test see if it works
-static void shellCallFt(void* data, ssize_t* total, const char* s) {
-  outFileData* structCast = data;
-  const char* const keyWord = "$(shell )";
-  const ssize_t len = strlen(s);
-  const ssize_t keyWordslen = strlen(keyWord);
-  if (MAX_VAR_NAME_LEN - *total + len + keyWordslen <= 0) {
-    fprintf(stderr, "scb: var is too long\n");
-    return ;
-  }
-  memcpy(structCast->configFile.buffer + *total, keyWord, keyWordslen - 1);
-  *total += keyWordslen -1;
-  memcpy(structCast->configFile.buffer + *total, s, len);
-  *total += len;
-  structCast->configFile.buffer[*total] = keyWord[keyWordslen -1];
-  (*total)++;
-}
+//static ssize_t shellCallFt(void* data, ssize_t* total, const char* s) {
+//  outFileData* structCast = data;
+//  const char* const keyWord = "$(shell )";
+//  const char* const line = s + SHELL_KEYWORD;
+//  ssize_t i = 0;
+//  structCast->shellEnd[0] = '1';
+//  while (s[i]) {
+//    i++;
+//  }
+//  (void)
+//  //* > getValue;
+//}
 
 ssize_t buildMakefile(outFileData* data) {
   ssize_t totalBytes = 0;
   // rework later
-  data->shellFt = shellCallFt;
+  //data->shellFt = shellCallFt;
   const char* hardcodePname = strrchr(data->scb->originPath, FILE_SEP) + 1;
   if (!newFile("Makefile", data))
     return -1;

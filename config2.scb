@@ -6,3 +6,5 @@ SHELL:bash
 
 DEP:
   echo %SHELL %CC %CXX %CFLAGS %CXXFLAGS %SHELL
+
+LIB:
