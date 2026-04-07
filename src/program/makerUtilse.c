@@ -284,6 +284,35 @@ bool newFile(char *name, outFileData *data) {
   return true;
 }
 
+static const char* const defaultFile[] = {
+  "NAMEX:",
+  "#",
+  "",
+  "#",
+  "#",
+  "#",
+  "#",
+  "#",
+  "",
+  "#IGN:",
+  "",
+  "#CC:",
+  "#CXX:",
+  "",
+  "#CFLAGS",
+  "#CXXFLAGS",
+  "",
+  "#ING",
+  "#DEP",
+  "",
+  "#PROG",
+  "#LIB",
+  "",
+  "#SHELL",
+  "",
+  0x0
+};
+
 static bool makeDefaultConfigFile(outFileData* data) {
   const int fd = open("defaultConfigFile.scb", O_CREAT | O_TRUNC | O_RDWR, 0644);
   if (!fd) {
@@ -293,14 +322,9 @@ static bool makeDefaultConfigFile(outFileData* data) {
   //! add safety later
   const char* name = strrchr(data->scb->path, FILE_SEP) + 1;
   output(fd, "NAME:%s\n", name);
-  output(fd, "NAMEX:\n\n");
-  output(fd, "# ignore folder, exp: 3part\n");
-  output(fd, "ING:\n\n");
-  output(fd, "# add var from config file\n");
-  output(fd, "PROG:\n\n");
-  output(fd, "# dependecy\n");
-  output(fd, "DEP:\n\n");
-  output(fd, "\n# all those variable are reserve\n");
+  for (size_t i = 0; defaultFile[i]; i++) {
+    output(fd, "%s\n", defaultFile[i]);
+  }
   for (int i = 0; reserveVarName[i]; i++) {
     output(fd, "# %s:\n", reserveVarName[i]);
   }
@@ -623,36 +647,36 @@ static size_t getValue(outFileData* data, ssize_t* total, const size_t start, co
   if (*total >= MAX_VAR_NAME_LEN)
     return 0;
   size_t i = 0;
-  const char* l = NULL;
+  const char* line = NULL;
   const size_t nameLen = findVarLen(name);
   if (IsKnowVar(data, total, nameLen, name))
     return nameLen;
   while (data->configFile.rawData[i]) {
-    l = data->configFile.rawData[i];
+    line = data->configFile.rawData[i];
     if (i > start) { return nameLen; }
-    if (strncmp(l, name, nameLen) == 0 && l[nameLen] == ':') { break ; }
+    if (strncmp(line, name, nameLen) == 0 && line[nameLen] == ':') { break ; }
     i++;
     if (!data->configFile.rawData[i]) { return nameLen; }
   }
   size_t j = nameLen + 1;
   bool nlValid = false;
   do {
-    const size_t lineLen = strlen(l);
+    const size_t lineLen = strlen(line);
     nlValid = false;
     while (j < lineLen) {
-      if (l[j] == '\\' && l[j + 1] == '%') {
+      if (line[j] == '\\' && line[j + 1] == '%') {
         addToc(data->configFile.buffer, '%', (*total)++);
         j += 2;
       }
-      else if (l[j] == '%') {
-        if (l[j + 1] == '_') {
-          if (testKeyWord(data, l + j + (TOKENSIZE * 2), &j, total))
+      else if (line[j] == '%') {
+        if (line[j + 1] == '_') {
+          if (testKeyWord(data, line + j + (TOKENSIZE * 2), &j, total))
             break ;
         }
-        j += getValue(data, total, i, l + j + TOKENSIZE) + TOKENSIZE;
+        j += getValue(data, total, i, line + j + TOKENSIZE) + TOKENSIZE;
       }
       else {
-        addToc(data->configFile.buffer, l[j], (*total)++);
+        addToc(data->configFile.buffer, line[j], (*total)++);
         j++;
       }
     }
@@ -661,9 +685,9 @@ static size_t getValue(outFileData* data, ssize_t* total, const size_t start, co
       addTo(data->configFile.buffer, data->shellEnd, total);
       data->shellEnd[0] = 0;
     }
-    l = data->configFile.rawData[++i];
-    if (isLineValid(l) == L_varValue) {
-      j = skipWhiteSpace(l, 0);
+    line = data->configFile.rawData[++i];
+    if (isLineValid(line) == L_varValue) {
+      j = skipWhiteSpace(line, 0);
       nlValid = true;
     }
   } while (nlValid);
