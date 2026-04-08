@@ -1,4 +1,4 @@
-# include "MakerUtilse.h"
+# include "MakerUtils.h"
 
 # include <ctype.h>
 
@@ -25,9 +25,9 @@ static ssize_t drawVarName(t_node* tmp, const char* from, const int* fd) {
 
 static ssize_t drawVar(outFileData* data, const int name) {
   const char* val =  readVariableName(data, name);
-  const int tabSize = getNumberTab(reserveVarName[name]);
+  const int tabSize = getNumberTab(reservedVarNames[name]);
   const char* tabs = "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t";
-  return output(data->fd, "%s%.*s=\t\t%s\n",reserveVarName[name], tabSize, tabs, val);
+  return output(data->fd, "%s%.*s=\t\t%s\n",reservedVarNames[name], tabSize, tabs, val);
 }
 
 static bool isNextFileValid(t_node* node) {
@@ -136,8 +136,6 @@ static ssize_t drawCompiler(outFileData* data) {
   ssize_t total = 0;
   total += drawVar(data, Vcc);
   total += drawVar(data, Vcxx);
-  //! remove later v
-  total += output(data->fd, "\n\nDEBUG\t\t\t=\t\t-g\n\n");
   total += drawVar(data, VCFLAGS);
   total += drawVar(data, VCXXFLAGS);
   total += output(data->fd, "\n\n\n");

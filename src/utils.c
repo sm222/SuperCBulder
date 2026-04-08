@@ -43,7 +43,7 @@ bool read_byte(int32_t flag, int32_t value) {
   return flag & value;
 }
 
-void showbits(int32_t var) {
+void print_bits(int32_t var) {
   int index = 32;
   char s[index + 1];
   s[index] = 0;
@@ -55,9 +55,9 @@ void showbits(int32_t var) {
 }
 
 #include <stdarg.h>
-#include "utilse.h"
+# include "utils.h"
 
-void put_str_error(t_setting* setting, const char* color, const char* str, ...) {
+void put_str_error(t_settings* setting, const char* color, const char* str, ...) {
   if (read_byte(setting->flags, setting_color)) {
     char b[50];
     sprintf(b, "%s*%s", color, RESET);

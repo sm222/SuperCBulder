@@ -1,6 +1,6 @@
 #include "scb.h"
 
-static char* getFileTypeSimble(int n) {
+static char* getFileTypeSymbol(int n) {
   if (n == folder)
     return "📁";
   if (n == cFile)
@@ -31,9 +31,9 @@ void printfolder(t_node* list, int tab, int mode) {
     }
     if (strncmp(".", list->data.name, 2) != 0 && strncmp("..", list->data.name, 3) != 0) {
       if (list->data.type != folder)
-        printf("%.*s[%s]%s%s\n", tab * 3, b, getFileTypeSimble(list->data.type), buff, list->data.name);
+        printf("%.*s[%s]%s%s\n", tab * 3, b, getFileTypeSymbol(list->data.type), buff, list->data.name);
       else {
-        printf("%.*s[%s]%s[%zu]%s\n", tab * 3, b, getFileTypeSimble(list->data.type), buff, list->data.fsize, list->data.name);
+        printf("%.*s[%s]%s[%zu]%s\n", tab * 3, b, getFileTypeSymbol(list->data.type), buff, list->data.fsize, list->data.name);
       }
     }
     if (list->child) {
@@ -119,7 +119,7 @@ int mapDir(const char* path, t_node** head, unsigned int maxDep) {
 }
 
 
-# include "MakerUtilse.h"
+# include "MakerUtils.h"
 
 static int grabAv(t_SCB* setting) {
   setting->buildType = av_read(&setting->mainData->avNoFlags, 1);
@@ -205,7 +205,7 @@ int scb(void* data) {
 
 
 int setStart(void* in) {
-  t_setting* ptr = in;
+  t_settings* ptr = in;
   ptr->programFt = &scb;
   return 0;
 }

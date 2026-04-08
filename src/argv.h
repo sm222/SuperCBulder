@@ -5,7 +5,7 @@
 
 typedef struct {
   char** data;
-  size_t ammout;
+  size_t amount;
 } t_avData;
 
 int av_setup(t_avData* input, size_t size);

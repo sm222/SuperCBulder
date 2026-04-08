@@ -2,7 +2,7 @@
 
 static ssize_t drawVar(outFileData* data, int name) {
   const char* value = readVariableName(data, name);
-  return output(data->fd, "%s=\"%s\"\n", reserveVarName[name], value);
+  return output(data->fd, "%s=\"%s\"\n", reservedVarNames[name], value);
 }
 
 static bool testIsIgnore(const char* name, const char* list) {

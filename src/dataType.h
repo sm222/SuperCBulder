@@ -33,7 +33,7 @@
 #  define SYSTYPE SYS_MAC
 # else
 #  define SYSTYPE -1
-#  error  "system not suported"
+#  error  "Unsupported system type"
 # endif
 
 # ifndef FILE_SEP
@@ -59,15 +59,18 @@
 # endif
 
 
-
+/*
+* Placeholders bellow
+* replace by additional settings if need be
+*/
 enum {
   setting_color = 1,
   setting_continue_on_error = 2,
-  setting_1 = 4, // add setting later
-  setting_2 = 8, // add setting later
-  setting_3 = 16,// add setting later
-  setting_4 = 32,// add setting later
-  setting_5 = 64,// add setting later
+  setting_1 = 4,
+  setting_2 = 8,
+  setting_3 = 16,
+  setting_4 = 32,
+  setting_5 = 64,
 };
 
 typedef struct mainData {
@@ -79,29 +82,29 @@ typedef struct mainData {
 
 # include "flags.h"
 
-typedef  int (*avProsses)(void* , const char*);
+typedef  int (*avProcess)(void* , const char*);
 typedef  int (*avSingle)(void*);
 typedef  int (*avDouble)(void*);
 
 typedef  int (*program)(void*);
 
-typedef struct setting {
+typedef struct settings {
   const int          stdIn;
   const int          stdOut;
   const int          ac;
   int                current;
   int                jump;
   const char* const* av;
-  const char*        programeName;
+  const char*        programName;
   t_avData           avNoFlags;
   int32_t            flags;
   const char* const* env;
   t_flagValue*       flagValue;
-  avProsses          avFt;
+  avProcess          avFt;
   program            programFt;
   avSingle           ftsingle;
   avDouble           ftdouble;
-} t_setting;
+} t_settings;
 
 
 

@@ -1,7 +1,7 @@
 #ifndef  MAKER_MAKEFILE_H
 # define MAKER_MAKEFILE_H
 
-# include "MakerUtilse.h"
+# include "MakerUtils.h"
 
 ssize_t buildMakefile(outFileData* data);
 

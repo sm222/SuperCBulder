@@ -1,4 +1,4 @@
-#include "MakerUtilse.h"
+#include "MakerUtils.h"
 #include "makerMakeFile.h"
 #include "makerBash.h"
 
@@ -181,8 +181,8 @@ size_t header(outFileData* data, const char* comment, const char* uName, const c
   timeinfo = localtime(&rawtime);
   size_t out = 0;
   out += output(data->fd, "%s - %s - %s\n", comment, comment, comment);
-  out += output(data->fd, "%s %s Make whit scb on %s",comment, fType, asctime(timeinfo));
-  out += output(data->fd, "%s build by %s\n", comment, maker);
+  out += output(data->fd, "%s %s Make with scb on %s",comment, fType, asctime(timeinfo));
+  out += output(data->fd, "%s built by %s\n", comment, maker);
   out += output(data->fd, "%s project name -> %s\n", comment, pName);
   out += output(data->fd, "%s config file -> %s\n", comment, data->configFile.name);
   out += output(data->fd, "%s - %s - %s\n", comment, comment, comment);
@@ -197,7 +197,7 @@ size_t header(outFileData* data, const char* comment, const char* uName, const c
 outFileData makerSetup(t_SCB* in, int mode) {
   outFileData data;
   bzero(&data, sizeof(data));
-  data.var.size = (sizeof(reserveVarName) / sizeof(char*)) - 1;
+  data.var.size = (sizeof(reservedVarNames) / sizeof(char*)) - 1;
   data.scb = in;
   data.outputType = mode;
   data.workingDirectory = in->path;
@@ -207,15 +207,15 @@ outFileData makerSetup(t_SCB* in, int mode) {
 
 # include "makerMakeFile.h"
 
-char* dialogBox(const char* question, const char* option, unsigned int reposeSize) {
+char* dialogBox(const char* question, const char* option, unsigned int responseSize) {
   //fprintf(stderr, "no config file found, do you want to continue?\n");
   //fprintf(stderr, "[y] yes | [m] make one | anyting else no\n");
   fprintf(stderr, "%s\t\n", question);
   fprintf(stderr, "%s\t\n", option);
-  if (reposeSize == 0)
+  if (responseSize == 0)
     return 0;
   static char out[1001];
-  ssize_t l = read(STDIN_FILENO, out, reposeSize); //! add safety
+  ssize_t l = read(STDIN_FILENO, out, responseSize); //! add safety
   out[l] = 0;
   return out;
 }
@@ -316,7 +316,7 @@ static const char* const defaultFile[] = {
 static bool makeDefaultConfigFile(outFileData* data) {
   const int fd = open("defaultConfigFile.scb", O_CREAT | O_TRUNC | O_RDWR, 0644);
   if (!fd) {
-    fprintf(stderr, "scb: fail to make default file %s\n", strerror(errno));
+    fprintf(stderr, "scb: failed to create default config file %s\n", strerror(errno));
     return false;
   }
   //! add safety later
@@ -325,20 +325,20 @@ static bool makeDefaultConfigFile(outFileData* data) {
   for (size_t i = 0; defaultFile[i]; i++) {
     output(fd, "%s\n", defaultFile[i]);
   }
-  for (int i = 0; reserveVarName[i]; i++) {
-    output(fd, "# %s:\n", reserveVarName[i]);
+  for (int i = 0; reservedVarNames[i]; i++) {
+    output(fd, "# %s:\n", reservedVarNames[i]);
   }
   output(fd, "#\n");
   close(fd);
-  printf("default file made\n");
+  printf("default config file generated\n");
   return true;
 }
 
-static int makeChoiseNoConfigFile(char respose, outFileData* data) {
-  if (respose == 'c') {
+static int makeChoiseNoConfigFile(char response, outFileData* data) {
+  if (response == 'c') {
     return 0;
   }
-  else if (respose == 'm') {
+  else if (response == 'm') {
     makeDefaultConfigFile(data);
   }
   return 1;
@@ -403,7 +403,7 @@ static int closeConfigFile(outFileData* data) {
 
 void printVar(outFileData* data) {
   for (size_t i = 0; i < data->var.size; i++) {
-    printf("%s[%c]\n", reserveVarName[i], data->var.varVAlue[i] ? 'x' : ' ');
+    printf("%s[%c]\n", reservedVarNames[i], data->var.varValue[i] ? 'x' : ' ');
   }
 }
 
@@ -456,18 +456,18 @@ static int checkVar(outFileData* data) {
   if (!data->configFile.fd)
     return 0;
   for (size_t i = 0; data->configFile.rawData[i]; i++) {
-    const int res = isVarName(data->configFile.rawData[i], reserveVarName);
-    if (res >= 0 && !data->var.varVAlue[res]) {
-      data->var.varVAlue[res] = true;
+    const int res = isVarName(data->configFile.rawData[i], reservedVarNames);
+    if (res >= 0 && !data->var.varValue[res]) {
+      data->var.varValue[res] = true;
     }
     else if (res >= 0) {
-      fprintf(stderr, "scb: %s redeclare var at ->\n", reserveVarName[res]);
+      fprintf(stderr, "scb: %s tried to redeclared at ->\n", reservedVarNames[res]);
       fprintf(stderr, "%s:%zu\n",data->configFile.name, i + 1);
       return 2;
     }
-    const bool* array = data->var.varVAlue;
+    const bool* array = data->var.varValue;
     if (array[Vprog] + array[Vlib]  + array[Vdlib] > 1) {
-      fprintf(stderr, MULT_COMPILE_RULE);
+      fprintf(stderr, MULT_COMPILE_RULES);
       return 3;
     }
   }
@@ -481,7 +481,7 @@ static bool isVar(const char* line, const char* varName, size_t l) {
 ssize_t addTo(char* to, const char* line, ssize_t* curentLen) {
   const size_t len = strlen(line);
   if (MAX_VAR_NAME_LEN - *curentLen + len <= 0) {
-    fprintf(stderr, "scb: var is too long\n");
+    fprintf(stderr, "scb: var name is too long\n");
     return 0;
   }
   memcpy(to + *curentLen, line, len + 1);
@@ -572,7 +572,6 @@ int checkIfFileValid(outFileData* data) {
     const char* l = data->configFile.rawData[i];
     const int line = isLineValid(l);
     if (!valid(prev, line)) {
-      //! add better error message
       fprintf(stderr, "scb: invalid config file\n" \
         "%s:%zu - > %s\n", data->configFile.name, i + 1, l);
       getParsingError(line);
@@ -627,8 +626,8 @@ static int testKeyWord(outFileData* data, const char* s, size_t* dis, ssize_t* t
 //! add suport for default value
 static bool IsKnowVar(outFileData* data, ssize_t* total, const size_t varlen, const char* name) {
   size_t i = 0;
-  while (reserveVarName[i]) {
-    if (strncmp(name, reserveVarName[i], varlen) == 0) {
+  while (reservedVarNames[i]) {
+    if (strncmp(name, reservedVarNames[i], varlen) == 0) {
       if (isVarInConfig(i, data->var)) {
         return false;
       }
@@ -696,15 +695,15 @@ static size_t getValue(outFileData* data, ssize_t* total, const size_t start, co
 
 
 //* return value from file or default value
-char* readVariableName(outFileData* data, e_reserveVarName name) {
+char* readVariableName(outFileData* data, e_reservedVarNames name) {
   bzero(data->configFile.buffer, MAX_VAR_NAME_LEN);
   size_t i = 0;
   ssize_t curentLen = 0;
-  const size_t len = strlen(reserveVarName[name]);
+  const size_t len = strlen(reservedVarNames[name]);
   if (isVarInConfig(name, data->var)) {
     while (data->configFile.rawData[i]) {
-      if (isVar(data->configFile.rawData[i], reserveVarName[name], len)) {
-        getValue(data, &curentLen, i, reserveVarName[name]);
+      if (isVar(data->configFile.rawData[i], reservedVarNames[name], len)) {
+        getValue(data, &curentLen, i, reservedVarNames[name]);
         break;
       }
       i++;
@@ -720,7 +719,7 @@ char* readVariableName(outFileData* data, e_reserveVarName name) {
 
 
 inline int isVarInConfig(int var, t_reserveVar varList) {
-  return varList.varVAlue[var];
+  return varList.varValue[var];
 }
 
 int makerStart(outFileData* data) {
@@ -729,7 +728,7 @@ int makerStart(outFileData* data) {
   const int configFile = printConfigFiles(data->scb->node);
   if (!configFile) {
     const char* r =  \
-    dialogBox(NO_CONFIG_FILE, WITCH_FILE_QUESTION, 1);
+    dialogBox(NO_CONFIG_FILE, CONFIG_FILE_QUESTION, 1);
     if (makeChoiseNoConfigFile(r[0], data)) {
       fprintf(stderr, "scb: stop\n");
       return 1;

@@ -13,19 +13,19 @@ int av_setup(t_avData* input, size_t size) {
 int av_add(t_avData* input, const char* av) {
   if (!input)
     return 1;
-  input->data[input->ammout++] = (char*)av;
+  input->data[input->amount++] = (char*)av;
   return 0;
 }
 
 char* av_read(t_avData* input, size_t i) {
-  if (!input || i > input->ammout) {
+  if (!input || i > input->amount) {
     return NULL;
   }
   return input->data[i];
 }
 
 size_t av_len(t_avData* input) {
-  return input ? input->ammout : 0;
+  return input ? input->amount : 0;
 }
 
 int av_free(t_avData* input) {

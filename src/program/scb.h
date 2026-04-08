@@ -2,7 +2,7 @@
 # define SCB_H
 
 # include "../dataType.h"
-# include "../utilse.h"
+# include "../utils.h"
 # include "node.h"
 # include <dirent.h>
 # include <sys/stat.h>
@@ -13,7 +13,7 @@
 
 
 typedef struct {
-  t_setting*    mainData;
+  t_settings*    mainData;
   char          path[PATH_MAX + 1];
   char          originPath[PATH_MAX + 1];
   unsigned int  maxDep;

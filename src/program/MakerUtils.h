@@ -1,9 +1,9 @@
-#ifndef  MAKE_UTISE_H
-# define MAKE_UTISE_H
+#ifndef  MAKE_UTILS_H
+# define MAKE_UTILS_H
 
 # include "node.h"
 # include "../dataType.h"
-# include "../utilse.h"
+# include "../utils.h"
 # include "fileType.h"
 # include <fcntl.h>
 # include "scb.h"
@@ -12,20 +12,24 @@
 # define ENDL(c)    ((c == '\n') || (c == '\0'))
 
 # define TOKENSIZE 1
-# define B
 
-# define NO_CONFIG_FILE "no config file found," \
-  " you want to make one or continue whit out it?"
+# define NO_CONFIG_FILE \
+"no config file found, do you want to generate one?"
 
-# define WITCH_FILE "multiple file found, witch one want to be use"
-# define WITCH_FILE_QUESTION "[c] continue | [m] make a config file |" \
-  " else stop"
+# define CONFIG_FILE_QUESTION \
+"[c] continue | [m] generate config file | else stop"
 
-# define MULT_COMPILE_RULE "scb: multiple compile rule define," \
-  " only one at the time can be use\n"
+# define WITCH_FILE \
+"multiple config were files found, select which one should be used :"
 
-# define UNKNOWN_TYPE "scb: file type unknown\ntype was [%d]\n"
-# define ERROR_FILE "error while parsing\ncode was [%d]\n"
+# define MULT_COMPILE_RULES \
+"scb: multiple compile rules defined, there can only be one\n"
+
+# define UNKNOWN_TYPE \
+"scb: file type unknown\ntype was [%d]\n"
+
+# define ERROR_FILE \
+"error while parsing\ncode was [%d]\n"
 
 enum {
   L_unknown  = -1,
@@ -57,7 +61,7 @@ typedef struct s_outVar {
   char*            name;
 } t_outVar;
 
-static const char* const reserveVarName[] = {
+static const char* const reservedVarNames[] = {
   "CC",
   "CXX",
   "NAME",
@@ -109,7 +113,7 @@ typedef enum {
   Vlib,
   Vdlib,
   Vshell,
-} e_reserveVarName;
+} e_reservedVarNames;
 
 static const char* const keyWords[] = {
   "LINUX ",
@@ -139,7 +143,7 @@ enum {
   k_shell   = 4,
 };
 
-//3 os, strat at 0 in keyWords
+//3 os, start at 0 in keyWords
 # define NUMBER_OF_OS 3
 
 # define MAX_VAR_NAME_LEN (PATH_MAX * 4)
@@ -154,7 +158,7 @@ typedef struct configValue {
 
 typedef struct s_reserveVar {
   size_t size; //? set size too reserveVarName
-  bool  varVAlue[sizeof(reserveVarName) / sizeof(char*)];
+  bool  varValue[sizeof(reservedVarNames) / sizeof(char*)];
 } t_reserveVar;
 
 typedef void(*shellCall)(void*, ssize_t*);
@@ -194,7 +198,7 @@ void        printOutVar(t_outVar* head);
 ssize_t     addToc(char* to, char c, size_t curentLen);
 
 
-char*       readVariableName(outFileData* data, e_reserveVarName name);
+char*       readVariableName(outFileData* data, e_reservedVarNames name);
 
 bool        newFile(char* name, outFileData* data);
 void        closeFile(outFileData* data);
