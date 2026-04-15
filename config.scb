@@ -23,7 +23,7 @@ bar:B
   %baz
 
 baz:C
-  %foo
+  %foo\wd
 
 ING:
 

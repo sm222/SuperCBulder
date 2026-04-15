@@ -641,6 +641,23 @@ static bool IsKnowVar(outFileData* data, ssize_t* total, const size_t varlen, co
   return false;
 }
 
+static ssize_t tokensInterpretor(char t, outFileData* data, ssize_t* total) {
+  char toAdd = ' ';
+  switch (t) {
+    case '\\':
+    case ';':
+    case '%':
+      toAdd = t;
+      break;
+    case 'n':
+      toAdd = '\n';
+      break ;
+    default:
+      fprintf(stderr, "warning: unknown token ascii[%d]\\%c replace by space\n", t, t);
+  }
+  addToc(data->configFile.buffer, toAdd, (*total)++);
+  return 1;
+}
 
 static size_t getValue(outFileData* data, ssize_t* total, const size_t start, const char* name) {
   if (*total >= MAX_VAR_NAME_LEN)
@@ -663,8 +680,8 @@ static size_t getValue(outFileData* data, ssize_t* total, const size_t start, co
     const size_t lineLen = strlen(line);
     nlValid = false;
     while (j < lineLen) {
-      if (line[j] == '\\' && line[j + 1] == '%') {
-        addToc(data->configFile.buffer, '%', (*total)++);
+      if (line[j] == '\\') {
+        tokensInterpretor(line[j + 1], data, total);
         j += 2;
       }
       else if (line[j] == '%') {
