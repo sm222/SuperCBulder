@@ -16,6 +16,8 @@ configfile --
 [ ]look for dup name in user var
 [ ]make better file promp choise
 [ ]add a better delult configfile
+[ ]add keyWord $_ROOT that use argv 0 
+   > to make a relatif path for other build and dependcy
 
 
 work in progress --

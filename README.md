@@ -174,6 +174,7 @@ scb only take the comment in consideration if the `#` is the first character on 
 |**_MACOS**   |only reads the rest of the line if the system is call on macos **or** targer is macos|
 |**_ENV\_{NAME}** |reads the environment variable with the same name|
 |**_SHELL**   |run line as is |
+|**_ROOT**    |get the root of the projet (first argv) |
 
 
 
@@ -186,10 +187,10 @@ scb only take the comment in consideration if the `#` is the first character on 
 | **cmake**  | build system |         |
 | **ninja**  | build system |         |
 | **meson**  | build system |         |
-| **sh**     | scripting    |  **X**  |
+| **sh**     | scripting    |  **\|** |
 | **pyton**  | scripting    |         |
 | **zig**    | scripting    |         |
 
 
 ## special thanks
-  [lord - ](https://github.com/loyc12)
+  - [lord](https://github.com/loyc12)

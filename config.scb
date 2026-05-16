@@ -25,6 +25,7 @@ bar:B
 baz:C
   %foo\wd
   %test
+  !%_ROOT!
 
 ING:
 

@@ -393,13 +393,8 @@ static int openConfigFile(outFileData* data) {
   }
   const size_t size = (MAXPATHLEN * 2) + 2;
   char  path[size];
-  if (read_byte(data->scb->mainData->flags, flags_detach)) {
-    const char* shortPath = av_read(&data->scb->mainData->avNoFlags, 0);
-    snprintf(path, size,"%s/%s", shortPath, data->configFile.name);
-  }
-  else {
-    snprintf(path, size,"%s/%s", data->scb->originPath, data->configFile.name);
-  }
+  const char* pathAv = av_read(&data->scb->mainData->avNoFlags, 0);
+  snprintf(path, size,"%s/%s", pathAv, data->configFile.name);
   data->configFile.fd = open(path, O_RDONLY);
   fprintf(stderr, "path -> %s\n", path);
   if (data->configFile.fd == 0) {
@@ -658,7 +653,11 @@ static int testKeyWord(outFileData* data, const char* s, size_t* dis, ssize_t* t
     data->shellFt(data, total);
     return 0;
   }
-  return 1;
+  if (i == k_root) {
+    const char* path = av_read(&data->scb->mainData->avNoFlags, 0);
+    addTo(data->configFile.buffer, path, total);
+  }
+  return 0;
 }
 
 static bool IsKnowVar(outFileData* data, ssize_t* total, const size_t varlen, const char* name) {

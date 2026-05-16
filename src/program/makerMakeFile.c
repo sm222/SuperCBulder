@@ -115,7 +115,6 @@ ssize_t drawName(const char* name, outFileData* data) {
   }
   else {
     t += output(data->fd, "NAME\t\t=\t\t%s\n", name);
-    fprintf(stderr, "->no\n");
   }
   //
   t += drawVar(data, Vnamex);

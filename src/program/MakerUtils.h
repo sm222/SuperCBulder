@@ -116,16 +116,19 @@ typedef enum {
   Vshell,
 } e_reservedVarNames;
 
+//3 os, start at 0 in keyWords
+# define NUMBER_OF_OS 3
+
 static const char* const keyWords[] = {
   "LINUX",
   "WINDOWS",
   "MACOS",
   "ENV_",
   "SHELL",
+  "ROOT",
   0x0,
 };
 
-# define SHELL_KEYWORD 5
 
 //*Static Library
 // ar rcs name|namex files
@@ -142,10 +145,10 @@ enum {
   k_macos   = 2,
   k_env     = 3,
   k_shell   = 4,
+  k_root    = 5,
 };
 
-//3 os, start at 0 in keyWords
-# define NUMBER_OF_OS 3
+
 
 # define MAX_VAR_NAME_LEN (PATH_MAX * 4)
 
