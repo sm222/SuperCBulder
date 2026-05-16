@@ -4,7 +4,7 @@ CC:gcc
 
 debug:-g
 
-default: 
+default:
   -D=HELLO
 
 

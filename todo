@@ -1,8 +1,6 @@
 
 param --
-[ ]add flags,
 [ ]add maxdept
-
 
 code base --
 [ ]clean code,
@@ -18,14 +16,18 @@ configfile --
 [ ]look for dup name in user var
 [ ]make better file promp choise
 [ ]add a better delult configfile
-[ ]config file, add \n \%
 
 
 work in progress --
 
 
 
-done
+done --
+[-] Sat 16 May 2026
+[x]detach flags
+[x]config file, add \n \%
+[x]add flags
+[-] - - -
 [x]clean code, some done
 [x]add sh output
 [x]add shell
