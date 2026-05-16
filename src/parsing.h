@@ -7,7 +7,13 @@
 #  define PROG_NAME "DefaultProgramName"
 # endif
 
+enum {
+  none = -1,
+  equal = 0,
+  next  = 1
+};
 
+char* grab_value(t_settings* settings, const char* value, int type);
 
 int env_parsing(t_settings* setting);
 //

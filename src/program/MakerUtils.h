@@ -186,7 +186,7 @@ int          makerStart(outFileData* data);
 short       printNl(const int fd);
 size_t      output(int fd, const char* s, ...);
 size_t      header(outFileData* data, const char* comment, const char* uName, const char* pName, const char* fType);
-
+bool        testIsIgnore(const char* name, const char* list);
 
 char*       findCommentFromType(int type);
 

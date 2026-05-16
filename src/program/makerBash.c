@@ -1,23 +1,9 @@
-# include "makerBash.h"
+# include "testFlags.h"
+# include "MakerUtils.h"
 
 static ssize_t drawVar(outFileData* data, int name) {
   const char* value = readVariableName(data, name);
   return output(data->fd, "%s=\"%s\"\n", reservedVarNames[name], value);
-}
-
-static bool testIsIgnore(const char* name, const char* list) {
-  if (!list)
-    return false;
-  size_t start = 0;
-  size_t end = 0;
-  while (list[start]) {
-    extractVar(list, start, &end, ';');
-    if (strncmp(list + start, name, end) == 0) {
-      return true;
-    }
-    start += end + TOKENSIZE;
-  }
-  return false;
 }
 
 
@@ -67,7 +53,11 @@ static ssize_t drawFile(outFileData* data) {
   ssize_t total = 0;
   t_node* tmp = data->scb->node;
   total += output(data->fd, "file=\"\\\n");
-  total += printFile(data, tmp, data->scb->originPath);
+  const char* path = data->scb->originPath;
+  if (read_byte(data->scb->mainData->flags, flags_detach)) {
+    path = av_read(&data->scb->mainData->avNoFlags, 0);
+  }
+  total += printFile(data, tmp, path);
   total += output(data->fd, "\"\n\n");
   if (isVarInConfig(Vdep, data->var)) {
     total += output(data->fd, "dep\n\n");
@@ -94,6 +84,8 @@ static ssize_t drawCompiler(outFileData* data) {
     total += DrawProgram(data, compile, flags);
   }
   if (lib) {
+    fprintf(stderr, " lib not made for sh\n");
+    return 0;
     t_node* tmp = data->scb->node;
     total += printFileO(data, tmp, data->scb->originPath, true);
     total += output(data->fd, "\n\nar rcs $NAME$NAMEX ");
@@ -149,7 +141,6 @@ static void shellCallFt(void* data, ssize_t* total) {
 }
 
 ssize_t buildBash(outFileData* data) {
-  (void)data;
   ssize_t totalBytes = 0;
   if (!newFile("build.sh", data))
     return -1;

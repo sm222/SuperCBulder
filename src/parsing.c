@@ -22,11 +22,6 @@ int env_parsing(t_settings* settings) {
   return 0;
 }
 
-enum {
-  none = -1,
-  equal = 0,
-  next  = 1
-};
 
 # define VAR_NAME_MAX_SIZE  NAME_MAX
 # define VALUE_MAX_SIZE     PATH_MAX
@@ -37,7 +32,7 @@ char   value__[VALUE_MAX_SIZE];
 # include <string.h>
 
 
-static char* grab_value(t_settings* settings, const char* value, int type) {
+char* grab_value(t_settings* settings, const char* value, int type) {
   bzero(&value__, VALUE_MAX_SIZE);
   const char*  p = value;
   if (!p)
@@ -86,7 +81,7 @@ int parsing_get_single(t_settings* settings) {
   for (size_t i = 1; i < len; i++) {
     error = set_single_value(settings, settings->av[settings->current][i]);
     if (!read_byte(settings->flags, setting_continue_on_error) && error)
-      break;
+      break ;
   }
   return error;
 }

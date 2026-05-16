@@ -203,9 +203,11 @@ int scb(void* data) {
   return SCB.error;
 }
 
+#include "testFlags.h"
 
 int setStart(void* in) {
   t_settings* ptr = in;
   ptr->programFt = &scb;
+  ptr->ftsingle = testSingle;
   return 0;
 }

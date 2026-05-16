@@ -4,6 +4,23 @@
 
 const size_t bSize = 9999;
 
+//*
+//*
+bool testIsIgnore(const char* name, const char* list) {
+  if (!list)
+    return false;
+  size_t start = 0;
+  size_t end = 0;
+  while (list[start]) {
+    extractVar(list, start, &end, ';');
+    if (strncmp(list + start, name, end) == 0) {
+      return true;
+    }
+    start += end + TOKENSIZE;
+  }
+  return false;
+}
+
 
 static t_outVar* makeOutVar(const char* name) {
   t_outVar* out = calloc(1, sizeof(*out));
@@ -368,6 +385,7 @@ static int readConfigFile(t_configValue* file) {
   return 0;
 }
 
+#include "testFlags.h"
 
 static int openConfigFile(outFileData* data) {
   if (!data->configFile.name) {
@@ -375,7 +393,13 @@ static int openConfigFile(outFileData* data) {
   }
   const size_t size = (MAXPATHLEN * 2) + 2;
   char  path[size];
-  snprintf(path, size,"%s/%s", data->scb->originPath, data->configFile.name);
+  if (read_byte(data->scb->mainData->flags, flags_detach)) {
+    const char* shortPath = av_read(&data->scb->mainData->avNoFlags, 0);
+    snprintf(path, size,"%s/%s", shortPath, data->configFile.name);
+  }
+  else {
+    snprintf(path, size,"%s/%s", data->scb->originPath, data->configFile.name);
+  }
   data->configFile.fd = open(path, O_RDONLY);
   fprintf(stderr, "path -> %s\n", path);
   if (data->configFile.fd == 0) {
@@ -637,7 +661,6 @@ static int testKeyWord(outFileData* data, const char* s, size_t* dis, ssize_t* t
   return 1;
 }
 
-//! add suport for default value
 static bool IsKnowVar(outFileData* data, ssize_t* total, const size_t varlen, const char* name) {
   size_t i = 0;
   while (reservedVarNames[i]) {
@@ -660,14 +683,14 @@ static ssize_t tokensInterpretor(char t, outFileData* data, ssize_t* total) {
   switch (t) {
     case '\\':
     case '%':
-    toAdd = t;
-    break;
+      toAdd = t;
+      break ;
     case 'n':
-    toAdd = '\n';
-    break ;
+      toAdd = '\n';
+      break ;
     case ' ':
       return 0;
-    break;
+    break ;
     default:
       fprintf(stderr, "warning: unknown token ascii[%d]\\%c replace by space\n", t, t);
   }
@@ -737,7 +760,7 @@ char* readVariableName(outFileData* data, e_reservedVarNames name) {
     while (data->configFile.rawData[i]) {
       if (isVar(data->configFile.rawData[i], reservedVarNames[name], len)) {
         getValue(data, &curentLen, i, reservedVarNames[name]);
-        break;
+        break ;
       }
       i++;
     }

@@ -78,12 +78,12 @@ static int base(t_mainData data, int fdIn, int fdOut) {
       }
     }
     error = read_byte(programSettings.flags, setting_continue_on_error);
-    if (error && status)
+    if (error || status)
       programSettings.current = programSettings.ac;
     put_str_error(&programSettings, RED, "code %d", status);// debug only
   }
   // programe here
-  if (programSettings.programFt && !(error && status))
+  if (programSettings.programFt && !(error || status))
     status = programSettings.programFt(&programSettings);
   av_free(&programSettings.avNoFlags);
   return status;

@@ -1,5 +1,5 @@
 # include "MakerUtils.h"
-
+# include "testFlags.h"
 # include <ctype.h>
 
 static char* capName(const char* name) {
@@ -61,21 +61,6 @@ ssize_t putAllFiles(outFileData* data, t_node* tmp, const char* from, const int 
 }
 
 
-static bool testIsIgnore(const char* name, const char* list) {
-  if (!list)
-    return false;
-  size_t start = 0;
-  size_t end = 0;
-  while (list[start]) {
-    extractVar(list, start, &end, ';');
-    if (strncmp(list + start, name, end) == 0) {
-      return true;
-    }
-    start += end + TOKENSIZE;
-  }
-  return false;
-}
-
 static ssize_t  buidFileAndFolder(outFileData* data, t_node** head, const char* from, const int* fd) {
   t_node* tmp = *head;
   ssize_t t = 0;
@@ -103,6 +88,10 @@ static ssize_t  buidFileAndFolder(outFileData* data, t_node** head, const char* 
 
 
 static ssize_t printRoot(const char* root, outFileData* data) {
+  if (read_byte(data->scb->mainData->flags, flags_detach)) {
+    const char* shortPath = av_read(&data->scb->mainData->avNoFlags, 0);
+    return output(data->fd, "F_%s\t\t=\t\t%s/\n", root, shortPath);
+  }
   return output(data->fd, "F_%s\t\t=\t\t%s/\n", root, data->workingDirectory);
 }
 
@@ -121,10 +110,13 @@ static ssize_t readList(t_node** head, outFileData* data) {
 
 ssize_t drawName(const char* name, outFileData* data) {
   ssize_t t = 0;
-  if (isVarInConfig(Vname, data->var))
+  if (isVarInConfig(Vname, data->var)) {
     t += drawVar(data, Vname);
-  else
+  }
+  else {
     t += output(data->fd, "NAME\t\t=\t\t%s\n", name);
+    fprintf(stderr, "->no\n");
+  }
   //
   t += drawVar(data, Vnamex);
   t += output(data->fd, "\n\n");
