@@ -385,7 +385,6 @@ static int readConfigFile(t_configValue* file) {
   return 0;
 }
 
-#include "testFlags.h"
 
 static int openConfigFile(outFileData* data) {
   if (!data->configFile.name) {
@@ -656,6 +655,7 @@ static int testKeyWord(outFileData* data, const char* s, size_t* dis, ssize_t* t
   if (i == k_root) {
     const char* path = av_read(&data->scb->mainData->avNoFlags, 0);
     addTo(data->configFile.buffer, path, total);
+    addToc(data->configFile.buffer, FILE_SEP, (*total)++);
   }
   return 0;
 }
